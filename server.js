@@ -170,7 +170,15 @@ app.post('/api/products/import-csv', (req, res) => {
       return res.status(400).json({ error: 'No se recibieron datos' });
     }
 
-    const lines = data.split(/[\n\r]+/).filter(l => l.trim());
+    // Split into rows: handle both newline-separated and ;;;;-separated formats
+    let lines;
+    const newlineCount = (data.match(/\n/g) || []).length;
+    if (newlineCount < 10 && data.length > 500) {
+      lines = data.split(/;{3,}/).map(l => l.trim()).filter(Boolean);
+    } else {
+      lines = data.split(/[\n\r]+/).map(l => l.replace(/;+$/, '').trim()).filter(Boolean);
+    }
+
     const products = [];
     let currentCategory = '';
     let id = 1;
@@ -180,46 +188,42 @@ app.post('/api/products/import-csv', (req, res) => {
       const first = cols[0] || '';
       if (!first) continue;
 
-      // Skip header/meta lines
-      if (first.match(/^(LISTA|INDICE|Urquiza|Rivadavia|Pedidos|Con tu|;;;)/i)) continue;
-      if (first === '' || first === '#REF!') continue;
+      // Skip known header/meta lines
+      if (/^(LISTA|INDICE|Urquiza|Rivadavia|Pedidos|Con tu)/i.test(first)) continue;
+      if (first === '#REF!' || first === 'aaa') continue;
 
-      // Category header: "N - CATEGORY NAME" or just number+name in index
+      // Category header: "N - CATEGORY NAME"
       const catMatch = first.match(/^(\d+)\s*[-–]\s*(.+)$/);
       if (catMatch) {
         const rawCat = catMatch[2].trim();
-        // Clean category name - title case
-        currentCategory = rawCat.split(' ').map(w => {
-          if (['Y','DE','E','EN','A','SIN','CON','POR','PARA'].includes(w.toUpperCase()) && w.length <= 4) {
-            return w.toLowerCase();
-          }
+        currentCategory = rawCat.split(/\s+/).map(w => {
+          const up = w.toUpperCase();
+          if (['Y','DE','E','EN','A','SIN','CON','POR','PARA'].includes(up) && w.length <= 4) return w.toLowerCase();
           return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
         }).join(' ');
         continue;
       }
 
-      // Skip index lines (just a number followed by category name)
-      if (first.match(/^\d+$/) && cols[1] && cols[1].match(/^[A-Z]/)) continue;
-      // Skip price format headers
-      if (first.match(/^\$\s*por/i) || (cols[1] && cols[1].match(/^\$\s*por/i) && !parsePrice(cols[1]))) continue;
-
+      // Skip index lines (just number + category name)
+      if (/^\d+$/.test(first) && cols[1] && /^[A-Z]/.test(cols[1])) continue;
+      // Skip price-format header lines like "$ por unidad"
+      if (/^\$\s*por/i.test(first)) continue;
+      // Skip if no category assigned yet
       if (!currentCategory) continue;
 
-      // Parse price from second column
-      const priceStr = cols[1] || '';
-      const price = parsePrice(priceStr);
+      // Try to get price from cols[1], or cols[2] if cols[1] is a price-format label
+      let priceStr = cols[1] || '';
+      if (/^\$\s*por/i.test(priceStr)) {
+        priceStr = cols[2] || '';
+      }
+      const price = parsePriceValue(priceStr);
 
-      // Skip lines that are clearly not products
-      if (!price && !priceStr) continue;
-      if (first.startsWith('$') && first.length < 15) continue;
-      if (first.match(/^\$\s*por/i)) continue;
-      if (first.match(/^(num|Num|chic|grand)/i) && !first.match(/\w{5,}/)) continue;
+      // Skip non-product lines
+      if (first.length < 3) continue;
+      if (/^\$/.test(first) && first.length < 12) continue;
 
-      // Extract weight from product name
-      const weightMatch = first.match(/(\d+\s*(ml|cc|gr|grs|kg|lt|lts|litro|litros))(?:\s|$|\))/i);
-      const peso = weightMatch ? weightMatch[1] : '';
-
-      // Clean product name
+      // Extract weight from name
+      const wm = first.match(/(\d+\s*(ml|cc|gr|grs|kg|lt|lts|litro|litros))\b/i);
       let nombre = first.replace(/^["']|["']$/g, '').trim();
       nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
 
@@ -232,17 +236,16 @@ app.post('/api/products/import-csv', (req, res) => {
         imagen: '',
         stock: 999,
         destacado: false,
-        peso,
+        peso: wm ? wm[1] : '',
         marca: 'La Familia',
         activo: price > 0
       });
     }
 
     if (products.length === 0) {
-      return res.status(400).json({ error: 'No se encontraron productos válidos en los datos' });
+      return res.status(400).json({ error: 'No se encontraron productos válidos en los datos. Asegurate de incluir las líneas de categoría (ej: 1 - ACEITES) antes de los productos.' });
     }
 
-    // Save to Excel
     saveProducts(products);
     res.json({ message: `Se importaron ${products.length} productos correctamente`, count: products.length });
   } catch (err) {
@@ -250,16 +253,13 @@ app.post('/api/products/import-csv', (req, res) => {
   }
 });
 
-function parsePrice(str) {
+function parsePriceValue(str) {
   if (!str) return 0;
-  // Remove $ sign, dots as thousands separators, handle comma as decimal
-  let cleaned = str.replace(/\$/g, '').trim();
-  // Handle formats like "3650", "$5.500", "$2900 x 100 grs"
-  // Take first number-like part
+  let cleaned = str.replace(/\$/g, '').replace(/,00$/,'').trim();
   const match = cleaned.match(/([\d.,]+)/);
   if (!match) return 0;
   let numStr = match[1];
-  // If it has dots and no comma, dots are thousands separators (Argentine format)
+  // Argentine format: dots are thousands, commas are decimals
   if (numStr.includes('.') && !numStr.includes(',')) {
     numStr = numStr.replace(/\./g, '');
   } else if (numStr.includes(',')) {
