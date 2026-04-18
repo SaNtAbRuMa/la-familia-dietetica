@@ -347,13 +347,15 @@ async function syncGoogleSheetsProducts() {
       let nombre = productName.replace(/^["']|["']$/g, '').trim();
       nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
       
+      const imgUrlCol = cols.find(c => typeof c === 'string' && c.startsWith('http'));
+      
       products.push({
         id: id++,
         nombre,
         descripcion: '',
         precio: price || 0,
         categoria: currentCategory,
-        imagen: '',
+        imagen: imgUrlCol || '',
         stock: 999,
         destacado: false,
         peso: wm ? wm[1] : '',
