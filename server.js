@@ -4,6 +4,9 @@ const XLSX = require('xlsx');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
+const { MercadoPagoConfig, Preference } = require('mercadopago');
+
+const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-12345678' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -397,7 +400,7 @@ app.get('/api/products/download/excel', (req, res) => {
 });
 
 // POST create order
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', async (req, res) => {
   try {
     const { cliente, items, total, metodoPago, direccion, notas } = req.body;
     
@@ -441,7 +444,41 @@ app.post('/api/orders', (req, res) => {
     });
     saveProducts(products);
     
-    res.json({ message: 'Pedido creado exitosamente', order: newOrder });
+    let init_point = null;
+    if (metodoPago === 'mercadopago' || metodoPago === 'tarjeta') {
+       try {
+          const preference = new Preference(mpClient);
+          const mpItems = items.map(i => ({
+             title: i.nombre,
+             unit_price: Number(i.precio),
+             quantity: Number(i.cantidad),
+             currency_id: 'ARS'
+          }));
+          
+          const shipping = total - items.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
+          if (shipping > 0) {
+              mpItems.push({ title: 'Envío', unit_price: shipping, quantity: 1, currency_id: 'ARS' });
+          }
+
+          const response = await preference.create({
+             body: {
+                items: mpItems,
+                back_urls: {
+                   success: 'https://la-familia-dietetica-production.up.railway.app/?status=success',
+                   failure: 'https://la-familia-dietetica-production.up.railway.app/?status=failure',
+                   pending: 'https://la-familia-dietetica-production.up.railway.app/?status=pending'
+                },
+                auto_return: 'approved',
+                external_reference: newOrder.id
+             }
+          });
+          init_point = response.init_point;
+       } catch (err) {
+          console.error('MercadoPago Error:', err);
+       }
+    }
+    
+    res.json({ message: 'Pedido creado exitosamente', order: newOrder, init_point });
   } catch (err) {
     res.status(500).json({ error: 'Error al crear pedido: ' + err.message });
   }

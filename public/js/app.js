@@ -14,6 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
   initContactForm();
   initParticles();
   updateCartUI();
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('status') === 'success') {
+    showToast('¡Pago aprobado! Tu pedido está en preparación.', 'success');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (urlParams.get('status') === 'failure') {
+    showToast('Hubo un problema con el pago. Por favor intenta nuevamente.', 'error');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (urlParams.get('status') === 'pending') {
+    showToast('Tu pago está pendiente de aprobación. Te avisaremos cuando se confirme.', 'success');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 });
 
 let originalProductsMap = new Map();
@@ -419,12 +431,16 @@ async function placeOrder() {
     });
     const data = await res.json();
     if (res.ok) {
-      document.getElementById('order-id-display').textContent = '#' + data.order.id;
-      document.querySelectorAll('.checkout-panel').forEach(p => p.classList.remove('active'));
-      document.getElementById('checkout-success').style.display = 'block';
       cart = [];
       saveCart();
       updateCartUI();
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        document.getElementById('order-id-display').textContent = '#' + data.order.id;
+        document.querySelectorAll('.checkout-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('checkout-success').style.display = 'block';
+      }
     } else {
       showToast(data.error || 'Error al crear pedido', 'error');
     }
