@@ -269,6 +269,113 @@ function parsePriceValue(str) {
   return isNaN(val) ? 0 : val;
 }
 
+// ========== GOOGLE SHEETS SYNC ==========
+function parseCSVRow(str) {
+  let result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === '"' && str[i+1] === '"') {
+      current += '"';
+      i++;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTpKijmFFMP1Ea4_wT1_X7bkoFQqIl1XbO73ywCDkDq2ImDOE6dqQ272Sa_nZOw8-Eu7hrISgcLCS5h/pub?gid=2102913718&single=true&output=csv';
+
+async function syncGoogleSheetsProducts() {
+  try {
+    const res = await fetch(GOOGLE_SHEETS_CSV_URL);
+    if (!res.ok) throw new Error('Network response was not ok');
+    const data = await res.text();
+    const lines = data.split(/[\n\r]+/).filter(Boolean);
+    const products = [];
+    let currentCategory = '';
+    let id = 1;
+
+    for (const line of lines) {
+      const cols = parseCSVRow(line).map(c => c.trim());
+      
+      let productName = '';
+      let priceStr = '';
+      
+      if (cols[0] === '' && cols[1]) {
+         productName = cols[1];
+         priceStr = cols[2] || '';
+      } else {
+         productName = cols[0] || '';
+         priceStr = cols[1] || '';
+         if (/^\$\s*por/i.test(priceStr)) priceStr = cols[2] || '';
+      }
+      
+      if (!productName) continue;
+      
+      if (/^(LISTA|INDICE|Urquiza|Rivadavia|Pedidos|Con tu)/i.test(productName)) continue;
+      if (productName === '#REF!' || productName === 'aaa') continue;
+      
+      const catMatch = productName.match(/^(\d+)\s*[-–]\s*(.+)$/);
+      if (catMatch) {
+        const rawCat = catMatch[2].trim();
+        currentCategory = rawCat.split(/\s+/).map(w => {
+          const up = w.toUpperCase();
+          if (['Y','DE','E','EN','A','SIN','CON','POR','PARA'].includes(up) && w.length <= 4) return w.toLowerCase();
+          return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        }).join(' ');
+        continue;
+      }
+      
+      if (/^\d+$/.test(productName) && cols[1] && /^[A-Z]/.test(cols[1])) continue;
+      if (/^\$\s*por/i.test(productName)) continue;
+      if (!currentCategory) continue;
+      
+      const price = parsePriceValue(priceStr);
+      if (productName.length < 3) continue;
+      if (/^\$/.test(productName) && productName.length < 12) continue;
+      
+      const wm = productName.match(/(\d+\s*(ml|cc|gr|grs|kg|lt|lts|litro|litros))\b/i);
+      let nombre = productName.replace(/^["']|["']$/g, '').trim();
+      nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
+      
+      products.push({
+        id: id++,
+        nombre,
+        descripcion: '',
+        precio: price || 0,
+        categoria: currentCategory,
+        imagen: '',
+        stock: 999,
+        destacado: false,
+        peso: wm ? wm[1] : '',
+        marca: 'La Familia',
+        activo: price > 0
+      });
+    }
+    
+    if (products.length > 100) {
+      saveProducts(products);
+      console.log(`Synced ${products.length} products from Google Sheets`);
+    }
+  } catch (err) {
+    console.error('Error syncing Google Sheets:', err);
+  }
+}
+
+// Run initial sync on startup
+setTimeout(syncGoogleSheetsProducts, 2000);
+// Sync every 5 minutes
+setInterval(syncGoogleSheetsProducts, 5 * 60 * 1000);
+
 // POST upload product image
 app.post('/api/products/image', imageUpload.single('image'), (req, res) => {
   try {
