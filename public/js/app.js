@@ -1,7 +1,9 @@
-// ========== STATE ==========
 let allProducts = [];
 let cart = JSON.parse(localStorage.getItem('vv_cart') || '[]');
 let currentProduct = null;
+let productsPerPage = 40;
+let currentlyShown = 0;
+let currentFiltered = [];
 
 // ========== DOM READY ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,17 +41,18 @@ async function loadProducts() {
     // Store original products for cart lookup
     rawProducts.forEach(p => originalProductsMap.set(p.id, p));
 
-    // Grouping logic
+    // Grouping logic: merge products that share the same base name (minus the size)
     let groupedMap = new Map();
     rawProducts.forEach(p => {
       let baseName = p.nombre;
       if (p.peso) {
-         // Safely remove peso from name
-         const pesoRegex = new RegExp('\\s*' + p.peso.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&') + '\\s*', 'i');
-         baseName = p.nombre.replace(pesoRegex, ' ').replace(/\\s+/g, ' ').trim();
+         // Remove the peso/size string from the product name to get the base name
+         const escaped = p.peso.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+         const pesoRegex = new RegExp('\\s*' + escaped + '\\s*', 'i');
+         baseName = p.nombre.replace(pesoRegex, ' ').replace(/\s+/g, ' ').trim();
       }
       
-      const key = `${p.categoria}::${baseName}`;
+      const key = p.categoria + '::' + baseName;
       
       if (!groupedMap.has(key)) {
         groupedMap.set(key, { 
@@ -73,6 +76,7 @@ async function loadProducts() {
     renderFeatured();
     renderCategories();
     renderAllProducts();
+    initLoadMore();
   } catch (e) {
     console.error('Error cargando productos:', e);
   }
@@ -99,8 +103,44 @@ function renderAllProducts(category = 'all', sort = 'default', search = '') {
     case 'name-asc': filtered.sort((a, b) => a.nombre.localeCompare(b.nombre)); break;
     case 'name-desc': filtered.sort((a, b) => b.nombre.localeCompare(a.nombre)); break;
   }
-  grid.innerHTML = filtered.length ? filtered.map(p => productCard(p)).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px;">No se encontraron productos.</p>';
+  
+  currentFiltered = filtered;
+  currentlyShown = Math.min(productsPerPage, filtered.length);
+  
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;"><i class="fas fa-search" style="font-size:3rem;color:var(--primary-light);opacity:.3;display:block;margin-bottom:16px"></i><p style="color:var(--text-muted);font-size:1.1rem">No se encontraron productos.</p></div>';
+  } else {
+    grid.innerHTML = filtered.slice(0, currentlyShown).map(p => productCard(p)).join('');
+  }
   attachProductEvents(grid);
+  updateLoadMoreButton();
+}
+
+function loadMoreProducts() {
+  const grid = document.getElementById('all-products');
+  const nextBatch = currentFiltered.slice(currentlyShown, currentlyShown + productsPerPage);
+  const temp = document.createElement('div');
+  temp.innerHTML = nextBatch.map(p => productCard(p)).join('');
+  while (temp.firstChild) grid.appendChild(temp.firstChild);
+  currentlyShown += nextBatch.length;
+  attachProductEvents(grid);
+  updateLoadMoreButton();
+  initScrollEffects();
+}
+
+function updateLoadMoreButton() {
+  const container = document.getElementById('load-more-container');
+  if (!container) return;
+  if (currentlyShown < currentFiltered.length) {
+    container.style.display = 'block';
+    document.getElementById('load-more-btn').textContent = `Cargar más (${currentFiltered.length - currentlyShown} restantes)`;
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function initLoadMore() {
+  document.getElementById('load-more-btn')?.addEventListener('click', loadMoreProducts);
 }
 
 function productCard(p) {
