@@ -143,8 +143,54 @@ function initLoadMore() {
   document.getElementById('load-more-btn')?.addEventListener('click', loadMoreProducts);
 }
 
+const categoryImages = {
+  'Aceites, Vinagres y Salsas': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=400&fit=crop',
+  'Avenas y Sojas': 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400&h=400&fit=crop',
+  'Bebidas': 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop',
+  'Cereales y Granolas': 'https://images.unsplash.com/photo-1517093602195-b40af9688b46?w=400&h=400&fit=crop',
+  'Complementos Dietarios': 'https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=400&h=400&fit=crop',
+  'Congelados y Refrigerados': 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400&h=400&fit=crop',
+  'Cosmetica Saludable': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=400&fit=crop',
+  'Cotillon': 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=400&fit=crop',
+  'Endulzantes': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop',
+  'Especias': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=400&fit=crop',
+  'Feculas y Harinas': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop',
+  'Fideos Varios': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=400&fit=crop',
+  'Frutas Deshidratadas': 'https://images.unsplash.com/photo-1596591868264-05856e155c1e?w=400&h=400&fit=crop',
+  'Frutos Secos': 'https://images.unsplash.com/photo-1599599810694-b5b37304c041?w=400&h=400&fit=crop',
+  'Galletitas': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&h=400&fit=crop',
+  'Galletitas sin Azucar': 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&h=400&fit=crop',
+  'Golosinas Saludables': 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&h=400&fit=crop',
+  'Herboristeria': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=400&fit=crop',
+  'Infusiones': 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=400&fit=crop',
+  'Legumbres': 'https://images.unsplash.com/photo-1515543904738-7f29a3567146?w=400&h=400&fit=crop',
+  'Mermeladas y Dulces': 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=400&fit=crop',
+  'Miel': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop',
+  'Pastas y Mantequillas de Mani': 'https://images.unsplash.com/photo-1612187209234-d03e7babe937?w=400&h=400&fit=crop',
+  'Premezclas y Rebozadores sin Tacc': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop',
+  'Productos Vegetarianos y Veganos': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop',
+  'Reposteria': 'https://images.unsplash.com/photo-1486427944544-d2c246c4df6c?w=400&h=400&fit=crop',
+  'Sales': 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=400&h=400&fit=crop',
+  'Semillas': 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400&h=400&fit=crop',
+  'Snacks': 'https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=400&h=400&fit=crop',
+  'Tostadas y Grisines': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=400&fit=crop',
+  'Varios': 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=400&h=400&fit=crop',
+};
+const defaultFoodImg = 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=400&h=400&fit=crop';
+
+function getProductImage(p) {
+  if (p.imagen) return p.imagen;
+  // Try to find a matching category image (case-insensitive partial match)
+  const cat = p.categoria || '';
+  for (const [key, url] of Object.entries(categoryImages)) {
+    if (cat.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(cat.toLowerCase())) return url;
+  }
+  return defaultFoodImg;
+}
+
 function productCard(p) {
-  const imgSrc = p.imagen ? `<img src="${p.imagen}" alt="${p.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+  const img = getProductImage(p);
+  const imgSrc = `<img src="${img}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`;
   
   let sizeSelector = '';
   if (p.isGrouped && p.variantes.length > 1) {
@@ -241,7 +287,7 @@ function openProductDetail(id) {
   const p = allProducts.find(x => x.id === id);
   if (!p) return;
   currentProduct = p;
-  document.getElementById('detail-image').src = p.imagen || '';
+  document.getElementById('detail-image').src = getProductImage(p);
   document.getElementById('detail-image').alt = p.nombre;
   document.getElementById('detail-category').textContent = p.categoria;
   document.getElementById('detail-name').textContent = p.nombre;
