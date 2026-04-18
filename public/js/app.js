@@ -16,11 +16,48 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartUI();
 });
 
+let originalProductsMap = new Map();
+
 // ========== PRODUCTS ==========
 async function loadProducts() {
   try {
     const res = await fetch('/api/products');
-    allProducts = await res.json();
+    const rawProducts = await res.json();
+    
+    // Store original products for cart lookup
+    rawProducts.forEach(p => originalProductsMap.set(p.id, p));
+
+    // Grouping logic
+    let groupedMap = new Map();
+    rawProducts.forEach(p => {
+      let baseName = p.nombre;
+      if (p.peso) {
+         // Safely remove peso from name
+         const pesoRegex = new RegExp('\\s*' + p.peso.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&') + '\\s*', 'i');
+         baseName = p.nombre.replace(pesoRegex, ' ').replace(/\\s+/g, ' ').trim();
+      }
+      
+      const key = `${p.categoria}::${baseName}`;
+      
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, { 
+          ...p, 
+          nombre: baseName, 
+          isGrouped: false,
+          variantes: [p] 
+        });
+      } else {
+        const parent = groupedMap.get(key);
+        parent.variantes.push(p);
+        parent.isGrouped = true;
+        parent.variantes.sort((a, b) => a.precio - b.precio);
+        parent.precio = parent.variantes[0].precio;
+        parent.peso = parent.variantes[0].peso;
+      }
+    });
+
+    allProducts = Array.from(groupedMap.values());
+    
     renderFeatured();
     renderCategories();
     renderAllProducts();
@@ -56,6 +93,19 @@ function renderAllProducts(category = 'all', sort = 'default', search = '') {
 
 function productCard(p) {
   const imgSrc = p.imagen ? `<img src="${p.imagen}" alt="${p.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+  
+  let sizeSelector = '';
+  if (p.isGrouped && p.variantes.length > 1) {
+    const options = p.variantes.map(v => `<option value="${v.id}">${v.peso || 'Normal'} - $${v.precio.toLocaleString('es-AR')}</option>`).join('');
+    sizeSelector = `<select class="variant-select" data-parent-id="${p.id}" style="width:100%; margin-top:10px; padding:8px; border-radius:5px; background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:0.9rem;">${options}</select>`;
+  } else {
+    sizeSelector = `
+      <div class="product-footer">
+        <span class="product-price">$${p.precio.toLocaleString('es-AR')}</span>
+        <span class="product-weight">${p.peso || ''}</span>
+      </div>`;
+  }
+
   return `
     <div class="product-card" data-id="${p.id}">
       <div class="product-card-image">
@@ -68,10 +118,7 @@ function productCard(p) {
         <div class="product-category">${p.categoria}</div>
         <h3 class="product-name"><a href="#" class="product-link" data-id="${p.id}">${p.nombre}</a></h3>
         <p class="product-desc">${p.descripcion}</p>
-        <div class="product-footer">
-          <span class="product-price">$${p.precio.toLocaleString('es-AR')}</span>
-          <span class="product-weight">${p.peso}</span>
-        </div>
+        ${sizeSelector}
       </div>
     </div>`;
 }
@@ -117,7 +164,13 @@ function renderCategories() {
 
 function attachProductEvents(container) {
   container.querySelectorAll('.product-quick-add').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); addToCart(parseInt(btn.dataset.id)); });
+    btn.addEventListener('click', e => { 
+      e.stopPropagation(); 
+      const card = btn.closest('.product-card');
+      const select = card.querySelector('.variant-select');
+      const addId = select ? parseInt(select.value) : parseInt(btn.dataset.id);
+      addToCart(addId); 
+    });
   });
   container.querySelectorAll('.product-link').forEach(link => {
     link.addEventListener('click', e => { e.preventDefault(); openProductDetail(parseInt(link.dataset.id)); });
@@ -140,9 +193,32 @@ function openProductDetail(id) {
   document.getElementById('detail-image').alt = p.nombre;
   document.getElementById('detail-category').textContent = p.categoria;
   document.getElementById('detail-name').textContent = p.nombre;
-  document.getElementById('detail-price').textContent = '$' + p.precio.toLocaleString('es-AR');
+  
+  const variantContainer = document.getElementById('detail-variant-container');
+  if (variantContainer) {
+      if (p.isGrouped && p.variantes.length > 1) {
+          const options = p.variantes.map(v => `<option value="${v.id}" data-price="${v.precio}" data-peso="${v.peso||''}">${v.peso || 'Normal'} - $${v.precio.toLocaleString('es-AR')}</option>`).join('');
+          variantContainer.innerHTML = `<label style="display:block; margin-bottom:5px; font-weight:600;">Tamaño/Variante:</label><select id="detail-variant-select" style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; background:var(--bg); border:1px solid var(--border); color:var(--text);">${options}</select>`;
+          
+          document.getElementById('detail-price').textContent = '$' + p.variantes[0].precio.toLocaleString('es-AR');
+          document.getElementById('detail-weight').textContent = p.variantes[0].peso || '';
+          
+          document.getElementById('detail-variant-select').addEventListener('change', e => {
+             const selectedOpt = e.target.options[e.target.selectedIndex];
+             document.getElementById('detail-price').textContent = '$' + parseFloat(selectedOpt.dataset.price).toLocaleString('es-AR');
+             document.getElementById('detail-weight').textContent = selectedOpt.dataset.peso || '';
+          });
+      } else {
+          variantContainer.innerHTML = '';
+          document.getElementById('detail-price').textContent = '$' + p.precio.toLocaleString('es-AR');
+          document.getElementById('detail-weight').textContent = p.peso || '';
+      }
+  } else {
+      document.getElementById('detail-price').textContent = '$' + p.precio.toLocaleString('es-AR');
+      document.getElementById('detail-weight').textContent = p.peso || '';
+  }
+  
   document.getElementById('detail-desc').textContent = p.descripcion;
-  document.getElementById('detail-weight').textContent = p.peso;
   document.getElementById('detail-brand').textContent = p.marca;
   document.getElementById('detail-stock').textContent = p.stock;
   document.getElementById('detail-qty').value = 1;
@@ -168,7 +244,10 @@ document.getElementById('detail-qty-plus')?.addEventListener('click', () => {
 document.getElementById('detail-add-cart')?.addEventListener('click', () => {
   if (!currentProduct) return;
   const qty = parseInt(document.getElementById('detail-qty').value) || 1;
-  addToCart(currentProduct.id, qty);
+  const variantSelect = document.getElementById('detail-variant-select');
+  const addId = variantSelect ? parseInt(variantSelect.value) : currentProduct.id;
+  
+  addToCart(addId, qty);
   closeProductModal();
 });
 
@@ -193,7 +272,7 @@ function closeCart() {
 }
 
 function addToCart(id, qty = 1) {
-  const p = allProducts.find(x => x.id === id);
+  const p = originalProductsMap.get(id);
   if (!p) return;
   const existing = cart.find(x => x.id === id);
   if (existing) existing.cantidad += qty;
