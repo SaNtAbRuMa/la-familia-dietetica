@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="La Familia Dietética - Tu tienda de alimentos saludables. Productos orgánicos, naturales y sin conservantes. Envío a todo el país.">
+  <title>La Familia Dietética | Alimentos Saludables y Naturales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- ============ NAVBAR ============ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo" id="logo-link">
+        <img src="/img/logo.png" alt="La Familia" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+        <span class="logo-text">La<span class="logo-accent">Familia</span></span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="#inicio" class="nav-link active" data-section="inicio">Inicio</a>
+        <a href="#tienda" class="nav-link" data-section="tienda">Tienda</a>
+        <a href="#categorias" class="nav-link" data-section="categorias">Categorías</a>
+        <a href="#nosotros" class="nav-link" data-section="nosotros">Nosotros</a>
+        <a href="#contacto" class="nav-link" data-section="contacto">Contacto</a>
+      </div>
+      <div class="nav-actions">
+        <button class="search-toggle" id="search-toggle" aria-label="Buscar">
+          <i class="fas fa-search"></i>
+        </button>
+        <button class="cart-toggle" id="cart-toggle" aria-label="Carrito">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <!-- Search bar -->
+    <div class="search-bar" id="search-bar">
+      <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="search-input" placeholder="Buscar productos saludables..." autocomplete="off">
+        <button class="search-close" id="search-close"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ HERO SECTION ============ -->
+  <section class="hero" id="inicio">
+    <div class="hero-bg">
+      <div class="hero-particles" id="hero-particles"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fas fa-leaf"></i>
+        <span>100% Natural & Orgánico</span>
+      </div>
+      <h1 class="hero-title">
+        Alimentá tu cuerpo,<br>
+        <span class="hero-gradient">nutría tu vida</span>
+      </h1>
+      <p class="hero-subtitle">
+        Descubrí nuestra selección de alimentos saludables, orgánicos y naturales.
+        Calidad premium directo a tu mesa.
+      </p>
+      <div class="hero-cta">
+        <a href="#tienda" class="btn btn-primary btn-lg">
+          <i class="fas fa-shopping-bag"></i> Explorar Tienda
+        </a>
+        <a href="#categorias" class="btn btn-outline btn-lg">
+          <i class="fas fa-th-large"></i> Ver Categorías
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-number" data-count="2000">0</span><span>+</span>
+          <span class="hero-stat-label">Productos</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number" data-count="5000">0</span><span>+</span>
+          <span class="hero-stat-label">Clientes felices</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number" data-count="100">0</span><span>%</span>
+          <span class="hero-stat-label">Natural</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <a href="#featured">
+        <i class="fas fa-chevron-down"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ FEATURED PRODUCTS ============ -->
+  <section class="section featured-section" id="featured">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">⭐ Destacados</span>
+        <h2 class="section-title">Productos Estrella</h2>
+        <p class="section-subtitle">Los favoritos de nuestros clientes, seleccionados especialmente para vos</p>
+      </div>
+      <div class="products-grid" id="featured-products">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CATEGORIES ============ -->
+  <section class="section categories-section" id="categorias">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">🏷️ Categorías</span>
+        <h2 class="section-title">Explorá por Categoría</h2>
+        <p class="section-subtitle">Encontrá exactamente lo que buscás en nuestras categorías</p>
+      </div>
+      <div class="categories-grid" id="categories-grid">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ALL PRODUCTS / SHOP ============ -->
+  <section class="section shop-section" id="tienda">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">🛒 Tienda</span>
+        <h2 class="section-title">Todos los Productos</h2>
+        <p class="section-subtitle">Nuestra selección completa de alimentos saludables</p>
+      </div>
+      <div class="shop-controls">
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="filter-tab active" data-category="all">Todos</button>
+          <!-- Dynamic category tabs -->
+        </div>
+        <div class="sort-control">
+          <select id="sort-select">
+            <option value="default">Ordenar por</option>
+            <option value="price-asc">Precio: Menor a Mayor</option>
+            <option value="price-desc">Precio: Mayor a Menor</option>
+            <option value="name-asc">Nombre: A-Z</option>
+            <option value="name-desc">Nombre: Z-A</option>
+          </select>
+        </div>
+      </div>
+      <div class="products-grid" id="all-products">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BENEFITS BANNER ============ -->
+  <section class="benefits-section">
+    <div class="container">
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon"><i class="fas fa-truck"></i></div>
+          <h3>Envío Gratis</h3>
+          <p>En compras superiores a $15.000</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon"><i class="fas fa-shield-alt"></i></div>
+          <h3>Pago Seguro</h3>
+          <p>Múltiples métodos de pago</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon"><i class="fas fa-leaf"></i></div>
+          <h3>100% Natural</h3>
+          <p>Productos orgánicos certificados</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon"><i class="fas fa-headset"></i></div>
+          <h3>Soporte 24/7</h3>
+          <p>Atención personalizada</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="section about-section" id="nosotros">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-image">
+          <div class="about-img-wrapper">
+            <div class="about-decoration"></div>
+            <img src="/img/about.jpg" alt="Sobre La Familia" onerror="this.style.display='none'; this.parentElement.classList.add('no-img')">
+          </div>
+        </div>
+        <div class="about-content">
+          <span class="section-badge">🌱 Nuestra Historia</span>
+          <h2 class="section-title left-align">Somos La Familia</h2>
+          <p>Nacimos con la misión de acercar alimentos saludables, naturales y de calidad a cada hogar. Creemos que alimentarse bien es el primer paso hacia una vida plena.</p>
+          <p>Trabajamos directamente con productores locales y orgánicos, garantizando frescura, trazabilidad y el mejor precio para nuestros clientes.</p>
+          <div class="about-features">
+            <div class="about-feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Productos seleccionados a mano</span>
+            </div>
+            <div class="about-feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Sin conservantes artificiales</span>
+            </div>
+            <div class="about-feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Comercio justo y sustentable</span>
+            </div>
+            <div class="about-feature">
+              <i class="fas fa-check-circle"></i>
+              <span>Asesoramiento nutricional</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="section contact-section" id="contacto">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">📬 Contacto</span>
+        <h2 class="section-title">¿Tenés alguna consulta?</h2>
+        <p class="section-subtitle">Escribinos y te respondemos a la brevedad</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <div>
+              <h4>Dirección</h4>
+              <p>Av. Corrientes 1234, CABA</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone"></i>
+            <div>
+              <h4>Teléfono</h4>
+              <p>+54 11 5555-1234</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <div>
+              <h4>Email</h4>
+              <p>hola@verdevida.com.ar</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-clock"></i>
+            <div>
+              <h4>Horarios</h4>
+              <p>Lun-Sáb: 9:00 - 20:00</p>
+            </div>
+          </div>
+        </div>
+        <form class="contact-form" id="contact-form">
+          <div class="form-row">
+            <div class="form-group">
+              <input type="text" id="contact-name" placeholder="Tu nombre" required>
+            </div>
+            <div class="form-group">
+              <input type="email" id="contact-email" placeholder="Tu email" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <input type="text" id="contact-subject" placeholder="Asunto" required>
+          </div>
+          <div class="form-group">
+            <textarea id="contact-message" placeholder="Tu mensaje..." rows="5" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-paper-plane"></i> Enviar Mensaje
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-logo">
+            <img src="/img/logo.png" alt="La Familia" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+            <span class="logo-text">La<span class="logo-accent">Familia</span></span>
+          </div>
+          <p>Tu dietética de confianza. Alimentos saludables, naturales y orgánicos para toda la familia.</p>
+          <div class="footer-social">
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-whatsapp"></i></a>
+            <a href="#"><i class="fab fa-tiktok"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegación</h4>
+          <a href="#inicio">Inicio</a>
+          <a href="#tienda">Tienda</a>
+          <a href="#categorias">Categorías</a>
+          <a href="#nosotros">Nosotros</a>
+          <a href="#contacto">Contacto</a>
+        </div>
+        <div class="footer-col">
+          <h4>Categorías</h4>
+          <a href="#">Frutos Secos</a>
+          <a href="#">Semillas</a>
+          <a href="#">Cereales</a>
+          <a href="#">Superfoods</a>
+          <a href="#">Aceites</a>
+        </div>
+        <div class="footer-col">
+          <h4>Ayuda</h4>
+          <a href="#">Preguntas Frecuentes</a>
+          <a href="#">Envíos</a>
+          <a href="#">Devoluciones</a>
+          <a href="#">Medios de Pago</a>
+          <a href="/admin">Panel Admin</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 La Familia Dietética. Todos los derechos reservados.</p>
+        <div class="payment-methods">
+          <i class="fab fa-cc-visa"></i>
+          <i class="fab fa-cc-mastercard"></i>
+          <i class="fab fa-cc-amex"></i>
+          <i class="fas fa-money-bill-wave"></i>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ CART SIDEBAR ============ -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h3><i class="fas fa-shopping-bag"></i> Mi Carrito</h3>
+      <button class="cart-close" id="cart-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cart-items">
+      <!-- Dynamic items -->
+    </div>
+    <div class="cart-empty" id="cart-empty">
+      <i class="fas fa-shopping-basket"></i>
+      <p>Tu carrito está vacío</p>
+      <a href="#tienda" class="btn btn-outline" id="cart-explore">Explorar Tienda</a>
+    </div>
+    <div class="cart-footer" id="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">$0</span>
+      </div>
+      <div class="cart-shipping">
+        <span>Envío</span>
+        <span id="cart-shipping">Calculado al finalizar</span>
+      </div>
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cart-total">$0</span>
+      </div>
+      <button class="btn btn-primary btn-block" id="checkout-btn">
+        <i class="fas fa-lock"></i> Finalizar Compra
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ PRODUCT DETAIL MODAL ============ -->
+  <div class="modal-overlay" id="product-modal">
+    <div class="modal-content product-detail-modal">
+      <button class="modal-close" id="modal-close"><i class="fas fa-times"></i></button>
+      <div class="product-detail-grid">
+        <div class="product-detail-image">
+          <img id="detail-image" src="" alt="">
+        </div>
+        <div class="product-detail-info">
+          <span class="product-category-badge" id="detail-category"></span>
+          <h2 id="detail-name"></h2>
+          <div class="product-detail-price" id="detail-price"></div>
+          <p class="product-detail-desc" id="detail-desc"></p>
+          <div class="product-detail-meta">
+            <div class="meta-item"><i class="fas fa-weight-hanging"></i> <span id="detail-weight"></span></div>
+            <div class="meta-item"><i class="fas fa-tag"></i> <span id="detail-brand"></span></div>
+            <div class="meta-item"><i class="fas fa-boxes-stacked"></i> Stock: <span id="detail-stock"></span></div>
+          </div>
+          <div class="product-detail-actions">
+            <div class="quantity-selector">
+              <button class="qty-btn minus" id="detail-qty-minus"><i class="fas fa-minus"></i></button>
+              <input type="number" id="detail-qty" value="1" min="1" max="99">
+              <button class="qty-btn plus" id="detail-qty-plus"><i class="fas fa-plus"></i></button>
+            </div>
+            <button class="btn btn-primary btn-lg" id="detail-add-cart">
+              <i class="fas fa-shopping-bag"></i> Agregar al Carrito
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CHECKOUT MODAL ============ -->
+  <div class="modal-overlay" id="checkout-modal">
+    <div class="modal-content checkout-modal-content">
+      <button class="modal-close" id="checkout-close"><i class="fas fa-times"></i></button>
+      <div class="checkout-container">
+        <h2><i class="fas fa-lock"></i> Finalizar Compra</h2>
+        
+        <!-- Checkout Steps -->
+        <div class="checkout-steps">
+          <div class="checkout-step active" data-step="1">
+            <span class="step-num">1</span>
+            <span class="step-label">Datos</span>
+          </div>
+          <div class="checkout-step" data-step="2">
+            <span class="step-num">2</span>
+            <span class="step-label">Envío</span>
+          </div>
+          <div class="checkout-step" data-step="3">
+            <span class="step-num">3</span>
+            <span class="step-label">Pago</span>
+          </div>
+        </div>
+
+        <!-- Step 1: Personal Data -->
+        <div class="checkout-panel active" id="checkout-step-1">
+          <h3>Datos Personales</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ch-nombre">Nombre completo *</label>
+              <input type="text" id="ch-nombre" required>
+            </div>
+            <div class="form-group">
+              <label for="ch-email">Email *</label>
+              <input type="email" id="ch-email" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ch-telefono">Teléfono *</label>
+            <input type="tel" id="ch-telefono" required>
+          </div>
+          <button class="btn btn-primary btn-block" id="checkout-next-1">
+            Continuar <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Step 2: Shipping -->
+        <div class="checkout-panel" id="checkout-step-2">
+          <h3>Dirección de Envío</h3>
+          <div class="form-group">
+            <label for="ch-direccion">Dirección completa *</label>
+            <input type="text" id="ch-direccion" placeholder="Calle, número, piso, dpto" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ch-ciudad">Ciudad *</label>
+              <input type="text" id="ch-ciudad" required>
+            </div>
+            <div class="form-group">
+              <label for="ch-cp">Código Postal *</label>
+              <input type="text" id="ch-cp" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ch-notas">Notas del pedido (opcional)</label>
+            <textarea id="ch-notas" rows="3" placeholder="Indicaciones especiales..."></textarea>
+          </div>
+          <div class="checkout-nav">
+            <button class="btn btn-outline" id="checkout-prev-2">
+              <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <button class="btn btn-primary" id="checkout-next-2">
+              Continuar <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3: Payment -->
+        <div class="checkout-panel" id="checkout-step-3">
+          <h3>Método de Pago</h3>
+          <div class="payment-methods-grid">
+            <label class="payment-option">
+              <input type="radio" name="payment" value="transferencia" checked>
+              <div class="payment-card">
+                <i class="fas fa-university"></i>
+                <span>Transferencia Bancaria</span>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="efectivo">
+              <div class="payment-card">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Efectivo al recibir</span>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="mercadopago">
+              <div class="payment-card">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Mercado Pago</span>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="tarjeta">
+              <div class="payment-card">
+                <i class="fas fa-credit-card"></i>
+                <span>Tarjeta de Crédito</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Order Summary -->
+          <div class="order-summary">
+            <h4>Resumen del Pedido</h4>
+            <div class="order-items" id="checkout-items"></div>
+            <div class="order-totals">
+              <div class="order-total-row">
+                <span>Subtotal</span>
+                <span id="checkout-subtotal">$0</span>
+              </div>
+              <div class="order-total-row">
+                <span>Envío</span>
+                <span id="checkout-shipping">Gratis</span>
+              </div>
+              <div class="order-total-row total">
+                <span>Total</span>
+                <span id="checkout-total">$0</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="checkout-nav">
+            <button class="btn btn-outline" id="checkout-prev-3">
+              <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <button class="btn btn-success btn-lg" id="place-order-btn">
+              <i class="fas fa-check"></i> Confirmar Pedido
+            </button>
+          </div>
+        </div>
+
+        <!-- Success -->
+        <div class="checkout-panel" id="checkout-success" style="display:none">
+          <div class="success-message">
+            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+            <h3>¡Pedido Confirmado!</h3>
+            <p>Tu pedido <strong id="order-id-display"></strong> fue registrado exitosamente.</p>
+            <p>Te enviamos un email con los detalles.</p>
+            <button class="btn btn-primary" id="success-close">Volver a la Tienda</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TOAST NOTIFICATION ============ -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ============ SCROLL TO TOP ============ -->
+  <button class="scroll-top" id="scroll-top" aria-label="Volver arriba">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

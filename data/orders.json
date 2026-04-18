@@ -1,0 +1,32 @@
+[
+  {
+    "id": "075AC243",
+    "fecha": "2026-04-17T23:31:21.760Z",
+    "cliente": {
+      "nombre": "Juan P",
+      "email": "juan@email.com",
+      "telefono": "1155551234",
+      "direccion": "Av. Corrientes 1234, Buenos Aires, CP 1043"
+    },
+    "items": [
+      {
+        "productoId": 1,
+        "nombre": "Granola Artesanal con Miel",
+        "cantidad": 2,
+        "precioUnitario": 2850,
+        "subtotal": 5700
+      },
+      {
+        "productoId": 2,
+        "nombre": "Mix de Frutos Secos Premium",
+        "cantidad": 1,
+        "precioUnitario": 4200,
+        "subtotal": 4200
+      }
+    ],
+    "total": 12400,
+    "metodoPago": "transferencia",
+    "estado": "pendiente",
+    "notas": ""
+  }
+]
