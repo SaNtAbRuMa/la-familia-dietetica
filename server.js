@@ -53,6 +53,7 @@ const imageUpload = multer({
 // Data paths
 const PRODUCTS_EXCEL = path.join(__dirname, 'data', 'productos.xlsx');
 const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
+const OVERRIDES_FILE = path.join(__dirname, 'data', 'local_overrides.json');
 
 // Admin credentials (in production, use environment variables and hashing)
 const ADMIN_USER = 'admin';
@@ -109,6 +110,19 @@ function readOrders() {
 
 function saveOrders(orders) {
   fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+}
+
+function readOverrides() {
+  try {
+    if (!fs.existsSync(OVERRIDES_FILE)) return {};
+    return JSON.parse(fs.readFileSync(OVERRIDES_FILE, 'utf8'));
+  } catch (err) {
+    return {};
+  }
+}
+
+function saveOverrides(overrides) {
+  fs.writeFileSync(OVERRIDES_FILE, JSON.stringify(overrides, null, 2));
 }
 
 // ========= API ROUTES =========
@@ -368,8 +382,16 @@ async function syncGoogleSheetsProducts() {
     }
     
     if (products.length > 100) {
-      saveProducts(products);
-      console.log(`Synced ${products.length} products from Google Sheets`);
+      // Apply local overrides before saving
+      const overrides = readOverrides();
+      const finalProducts = products.map(p => {
+        if (overrides[p.id]) {
+          return { ...p, ...overrides[p.id] };
+        }
+        return p;
+      });
+      saveProducts(finalProducts);
+      console.log(`Synced ${finalProducts.length} products from Google Sheets with overrides applied`);
     }
   } catch (err) {
     console.error('Error syncing Google Sheets:', err);
@@ -389,6 +411,37 @@ app.post('/api/admin/sync', async (req, res) => {
     res.json({ message: 'Sincronización completada', count: products.length });
   } catch (err) {
     res.status(500).json({ error: 'Error al sincronizar: ' + err.message });
+  }
+});
+
+// PUT update product (admin)
+app.put('/api/admin/products/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const updates = req.body;
+    
+    // Read current products
+    const products = readProducts();
+    const index = products.findIndex(p => p.id === id);
+    
+    if (index === -1) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+    
+    // Update in memory
+    products[index] = { ...products[index], ...updates };
+    
+    // Save to overrides
+    const overrides = readOverrides();
+    overrides[id] = { ...(overrides[id] || {}), ...updates };
+    saveOverrides(overrides);
+    
+    // Save to excel
+    saveProducts(products);
+    
+    res.json({ message: 'Producto actualizado', product: products[index] });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar producto: ' + err.message });
   }
 });
 

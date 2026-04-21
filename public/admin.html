@@ -182,6 +182,48 @@
     </div>
   </div>
 
+  <!-- EDIT PRODUCT MODAL -->
+  <div class="admin-modal-overlay" id="edit-product-modal">
+    <div class="admin-modal" style="max-width:500px;">
+      <div class="admin-modal-header">
+        <h2 style="font-family:'Outfit',sans-serif;font-size:1.2rem">Editar Producto</h2>
+        <button class="admin-modal-close" onclick="closeEditProductModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="admin-modal-body">
+        <input type="hidden" id="edit-prod-id">
+        <div style="margin-bottom:12px;">
+          <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">Nombre</label>
+          <input type="text" id="edit-prod-nombre" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">Precio ($)</label>
+          <input type="number" id="edit-prod-precio" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">Stock</label>
+          <input type="number" id="edit-prod-stock" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+        </div>
+        <div style="margin-bottom:12px; display:flex; gap:12px;">
+          <div style="flex:1;">
+             <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">Estado</label>
+             <select id="edit-prod-activo" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+                <option value="true">Activo</option>
+                <option value="false">Inactivo</option>
+             </select>
+          </div>
+          <div style="flex:1;">
+             <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">Destacado</label>
+             <select id="edit-prod-destacado" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+             </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="saveProductEdit()" id="save-prod-btn">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API = '';
     let token = localStorage.getItem('vv_admin_token');
@@ -311,12 +353,13 @@
       loadOrders(); loadStats(); showAdminToast('Pedido eliminado');
     }
 
-    // PRODUCTS
+    let allProductsList = [];
+
     async function loadProducts() {
       try {
         const res = await fetch(API + '/api/admin/products');
-        const products = await res.json();
-        document.getElementById('products-table').innerHTML = products.length ? `<table><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>${products.map(p => {
+        allProductsList = await res.json();
+        document.getElementById('products-table').innerHTML = allProductsList.length ? `<table><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${allProductsList.map(p => {
           const isLowStock = p.stock !== undefined && p.stock < 5;
           const stockHtml = isLowStock 
             ? `<span style="color:#f85149; font-weight:bold;"><i class="fas fa-exclamation-triangle"></i> ${p.stock}</span>` 
@@ -325,8 +368,61 @@
           <td>${p.id}</td><td><strong>${p.nombre}</strong><br><small style="color:var(--text-muted)">${p.peso} - ${p.marca}</small></td>
           <td>${p.categoria}</td><td>$${p.precio.toLocaleString('es-AR')}</td><td>${stockHtml}</td>
           <td><span class="badge ${p.activo?'badge-confirmed':'badge-cancelled'}">${p.activo?'Activo':'Inactivo'}</span></td>
+          <td class="actions-cell"><button class="action-btn" title="Editar" onclick="openEditProductModal(${p.id})"><i class="fas fa-edit"></i></button></td>
         </tr>`}).join('')}</tbody></table>` : '<p style="color:var(--text-muted);text-align:center;padding:40px">No hay productos</p>';
       } catch (e) {}
+    }
+
+    function openEditProductModal(id) {
+       const p = allProductsList.find(x => x.id === id);
+       if (!p) return;
+       document.getElementById('edit-prod-id').value = p.id;
+       document.getElementById('edit-prod-nombre').value = p.nombre;
+       document.getElementById('edit-prod-precio').value = p.precio;
+       document.getElementById('edit-prod-stock').value = p.stock;
+       document.getElementById('edit-prod-activo').value = p.activo ? 'true' : 'false';
+       document.getElementById('edit-prod-destacado').value = p.destacado ? 'true' : 'false';
+       document.getElementById('edit-product-modal').classList.add('active');
+    }
+
+    function closeEditProductModal() {
+       document.getElementById('edit-product-modal').classList.remove('active');
+    }
+
+    async function saveProductEdit() {
+       const id = document.getElementById('edit-prod-id').value;
+       const btn = document.getElementById('save-prod-btn');
+       btn.disabled = true;
+       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+       
+       const updates = {
+          nombre: document.getElementById('edit-prod-nombre').value,
+          precio: parseFloat(document.getElementById('edit-prod-precio').value) || 0,
+          stock: parseInt(document.getElementById('edit-prod-stock').value) || 0,
+          activo: document.getElementById('edit-prod-activo').value === 'true',
+          destacado: document.getElementById('edit-prod-destacado').value === 'true'
+       };
+       
+       try {
+          const res = await fetch(API + '/api/admin/products/' + id, {
+             method: 'PUT',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify(updates)
+          });
+          if (res.ok) {
+             showAdminToast('Producto actualizado (Guardado Local)');
+             closeEditProductModal();
+             loadProducts();
+             loadStats();
+          } else {
+             showAdminToast('Error al guardar', true);
+          }
+       } catch (err) {
+          showAdminToast('Error de red', true);
+       }
+       
+       btn.disabled = false;
+       btn.innerHTML = 'Guardar Cambios';
     }
 
     // GOOGLE SHEETS SYNC
