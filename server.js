@@ -381,6 +381,17 @@ setTimeout(syncGoogleSheetsProducts, 2000);
 // Sync every 5 minutes
 setInterval(syncGoogleSheetsProducts, 5 * 60 * 1000);
 
+// POST force sync (admin)
+app.post('/api/admin/sync', async (req, res) => {
+  try {
+    await syncGoogleSheetsProducts();
+    const products = readProducts();
+    res.json({ message: 'Sincronización completada', count: products.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al sincronizar: ' + err.message });
+  }
+});
+
 // POST upload product image
 app.post('/api/products/image', imageUpload.single('image'), (req, res) => {
   try {

@@ -370,6 +370,9 @@
       <button class="btn btn-primary btn-block" id="checkout-btn">
         <i class="fas fa-lock"></i> Finalizar Compra
       </button>
+      <button class="btn btn-outline btn-block" id="clear-cart-btn" style="margin-top:10px; border-color:rgba(231,76,60,.4); color:#e74c3c;">
+        <i class="fas fa-trash-alt"></i> Vaciar Carrito
+      </button>
     </div>
   </aside>
 
@@ -553,8 +556,15 @@
             <div class="success-icon"><i class="fas fa-check-circle"></i></div>
             <h3>¡Pedido Confirmado!</h3>
             <p>Tu pedido <strong id="order-id-display"></strong> fue registrado exitosamente.</p>
-            <p>Te enviamos un email con los detalles.</p>
-            <button class="btn btn-primary" id="success-close">Volver a la Tienda</button>
+            <p>Hemos recibido tu pedido y comenzaremos a prepararlo pronto.</p>
+            <div style="margin-top:20px; display:flex; flex-direction:column; gap:12px; align-items:center;">
+               <button class="btn btn-success" id="whatsapp-order-btn" style="background:#25d366; border:none; width:100%; max-width:300px;">
+                  <i class="fab fa-whatsapp"></i> Enviar a WhatsApp
+               </button>
+               <button class="btn btn-primary" id="success-close" style="width:100%; max-width:300px;">
+                  Volver a la tienda
+               </button>
+            </div>
           </div>
         </div>
       </div>

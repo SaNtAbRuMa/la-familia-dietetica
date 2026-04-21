@@ -377,13 +377,26 @@ function addToCart(id, qty = 1) {
   else cart.push({ id: p.id, nombre: p.nombre, precio: p.precio, imagen: p.imagen, peso: p.peso, cantidad: qty });
   saveCart();
   updateCartUI();
-  showToast(`${p.nombre} agregado al carrito`, 'success');
+  
+  // Open cart automatically to show the user it was added
+  document.getElementById('cart-sidebar').classList.add('active');
+  document.getElementById('cart-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
 }
 
 function removeFromCart(id) {
   cart = cart.filter(x => x.id !== id);
   saveCart();
   updateCartUI();
+}
+
+function clearCart() {
+  if (confirm('¿Estás seguro de que querés vaciar tu carrito?')) {
+    cart = [];
+    saveCart();
+    updateCartUI();
+    showToast('Carrito vaciado', 'success');
+  }
 }
 
 function updateQty(id, delta) {
@@ -439,15 +452,19 @@ function updateCartUI() {
 }
 
 // ========== CHECKOUT ==========
+let lastOrderData = null;
+
 function initCheckout() {
   document.getElementById('checkout-close')?.addEventListener('click', closeCheckout);
   document.getElementById('checkout-modal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeCheckout(); });
+  document.getElementById('clear-cart-btn')?.addEventListener('click', clearCart);
   document.getElementById('checkout-next-1')?.addEventListener('click', () => goToStep(2));
   document.getElementById('checkout-next-2')?.addEventListener('click', () => goToStep(3));
   document.getElementById('checkout-prev-2')?.addEventListener('click', () => goToStep(1));
   document.getElementById('checkout-prev-3')?.addEventListener('click', () => goToStep(2));
   document.getElementById('place-order-btn')?.addEventListener('click', placeOrder);
   document.getElementById('success-close')?.addEventListener('click', () => { closeCheckout(); location.reload(); });
+  document.getElementById('whatsapp-order-btn')?.addEventListener('click', sendOrderToWhatsApp);
 }
 
 function openCheckout() {
@@ -517,6 +534,7 @@ async function placeOrder() {
     });
     const data = await res.json();
     if (res.ok) {
+      lastOrderData = { ...data.order, rawItems: cart };
       cart = [];
       saveCart();
       updateCartUI();
@@ -535,6 +553,27 @@ async function placeOrder() {
   }
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-check"></i> Confirmar Pedido';
+}
+
+function sendOrderToWhatsApp() {
+  if (!lastOrderData) return;
+  const phone = '5492284638849';
+  let msg = `*¡Hola! Acabo de hacer un pedido en la web.*%0A%0A`;
+  msg += `*Pedido:* #${lastOrderData.id}%0A`;
+  msg += `*Nombre:* ${lastOrderData.cliente.nombre}%0A`;
+  if (lastOrderData.cliente.direccion) msg += `*Dirección:* ${lastOrderData.cliente.direccion}%0A`;
+  msg += `*Pago:* ${lastOrderData.metodoPago.toUpperCase()}%0A%0A`;
+  msg += `*PRODUCTOS:*%0A`;
+  lastOrderData.rawItems.forEach(i => {
+    msg += `- ${i.cantidad}x ${i.nombre} ($${(i.precio * i.cantidad).toLocaleString('es-AR')})%0A`;
+  });
+  msg += `%0A*TOTAL: $${lastOrderData.total.toLocaleString('es-AR')}*`;
+  
+  if (lastOrderData.notas) {
+     msg += `%0A%0A*Notas:* ${lastOrderData.notas}`;
+  }
+
+  window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
 }
 
 // ========== NAVBAR ==========
