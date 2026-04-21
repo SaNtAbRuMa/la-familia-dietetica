@@ -192,7 +192,7 @@
         <div class="about-image">
           <div class="about-img-wrapper">
             <div class="about-decoration"></div>
-            <img src="/img/about.jpg" alt="Sobre La Familia" onerror="this.style.display='none'; this.parentElement.classList.add('no-img')">
+            <img src="/img/about.jpg" alt="Sobre La Familia" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('no-img')">
           </div>
         </div>
         <div class="about-content">
@@ -405,6 +405,12 @@
               <i class="fas fa-shopping-bag"></i> Agregar al Carrito
             </button>
           </div>
+        </div>
+      </div>
+      <div class="related-products-container" id="related-products-container" style="display:none; margin-top:40px; border-top:1px solid var(--border); padding-top:20px;">
+        <h3 style="font-family:'Outfit',sans-serif; margin-bottom:16px;">Productos Relacionados</h3>
+        <div class="products-grid" id="related-products-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+          <!-- Loaded dynamically -->
         </div>
       </div>
     </div>

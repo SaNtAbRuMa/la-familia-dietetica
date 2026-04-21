@@ -320,6 +320,21 @@ function openProductDetail(id) {
   document.getElementById('detail-brand').textContent = p.marca;
   document.getElementById('detail-stock').textContent = p.stock;
   document.getElementById('detail-qty').value = 1;
+  
+  // Render Related Products
+  const relatedContainer = document.getElementById('related-products-container');
+  const relatedGrid = document.getElementById('related-products-grid');
+  if (relatedContainer && relatedGrid) {
+      const related = allProducts.filter(x => x.categoria === p.categoria && x.id !== p.id).slice(0, 4);
+      if (related.length > 0) {
+          relatedGrid.innerHTML = related.map(r => productCard(r)).join('');
+          attachProductEvents(relatedGrid);
+          relatedContainer.style.display = 'block';
+      } else {
+          relatedContainer.style.display = 'none';
+      }
+  }
+
   document.getElementById('product-modal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -378,10 +393,14 @@ function addToCart(id, qty = 1) {
   saveCart();
   updateCartUI();
   
-  // Open cart automatically to show the user it was added
-  document.getElementById('cart-sidebar').classList.add('active');
-  document.getElementById('cart-overlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
+  // Visual feedback: animate cart icon
+  const cartIcon = document.getElementById('cart-toggle');
+  if (cartIcon) {
+    cartIcon.classList.add('bump');
+    setTimeout(() => cartIcon.classList.remove('bump'), 300);
+  }
+  
+  showToast(`¡${p.nombre} agregado!`, 'success');
 }
 
 function removeFromCart(id) {
