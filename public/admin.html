@@ -203,6 +203,10 @@
           <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">Stock</label>
           <input type="number" id="edit-prod-stock" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
         </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">URL Imagen (opcional)</label>
+          <input type="text" id="edit-prod-imagen" placeholder="https://..." style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+        </div>
         <div style="margin-bottom:12px; display:flex; gap:12px;">
           <div style="flex:1;">
              <label style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted)">Estado</label>
@@ -380,6 +384,7 @@
        document.getElementById('edit-prod-nombre').value = p.nombre;
        document.getElementById('edit-prod-precio').value = p.precio;
        document.getElementById('edit-prod-stock').value = p.stock;
+       document.getElementById('edit-prod-imagen').value = p.imagen || '';
        document.getElementById('edit-prod-activo').value = p.activo ? 'true' : 'false';
        document.getElementById('edit-prod-destacado').value = p.destacado ? 'true' : 'false';
        document.getElementById('edit-product-modal').classList.add('active');
@@ -399,6 +404,7 @@
           nombre: document.getElementById('edit-prod-nombre').value,
           precio: parseFloat(document.getElementById('edit-prod-precio').value) || 0,
           stock: parseInt(document.getElementById('edit-prod-stock').value) || 0,
+          imagen: document.getElementById('edit-prod-imagen').value,
           activo: document.getElementById('edit-prod-activo').value === 'true',
           destacado: document.getElementById('edit-prod-destacado').value === 'true'
        };

@@ -148,6 +148,29 @@ app.get('/api/products/:id', (req, res) => {
   res.json(product);
 });
 
+// PUT update product (admin)
+app.put('/api/admin/products/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const updates = req.body;
+    
+    const products = readProducts();
+    const index = products.findIndex(p => p.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Producto no encontrado' });
+    
+    products[index] = { ...products[index], ...updates };
+    saveProducts(products);
+    
+    const overrides = readOverrides();
+    overrides[id] = { ...(overrides[id] || {}), ...updates };
+    saveOverrides(overrides);
+    
+    res.json({ message: 'Producto actualizado', product: products[index] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET categories
 app.get('/api/categories', (req, res) => {
   const products = readProducts();
@@ -160,20 +183,49 @@ app.post('/api/products/upload', upload.single('excel'), (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No se recibió archivo' });
     
-    // Read uploaded file
-    const workbook = XLSX.readFile(req.file.path);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
+    let isRawFormat = false;
+    let workbook, sheet, data;
     
-    // Validate
-    if (data.length === 0) {
-      return res.status(400).json({ error: 'El archivo Excel está vacío' });
+    if (req.file.originalname.toLowerCase().endsWith('.csv')) {
+       // Si suben un .csv directamente, lo leemos como texto y lo pasamos al parser inteligente
+       const text = fs.readFileSync(req.file.path, 'utf8');
+       const lines = text.split(/[\n\r]+/).filter(Boolean);
+       let delimiter = ',';
+       if (text.includes('\t')) delimiter = '\t';
+       else if (text.includes(';')) delimiter = ';';
+       
+       const products = convertLinesToProducts(lines, delimiter);
+       if (products.length === 0) {
+          return res.status(400).json({ error: 'No se encontraron productos válidos en el CSV.' });
+       }
+       saveProducts(products);
+       return res.json({ message: `Se importaron ${products.length} productos correctamente desde el CSV`, count: products.length });
+    } else {
+       // Es un Excel (.xls, .xlsx)
+       workbook = XLSX.readFile(req.file.path);
+       sheet = workbook.Sheets[workbook.SheetNames[0]];
+       data = XLSX.utils.sheet_to_json(sheet);
+       
+       if (data.length === 0) {
+         return res.status(400).json({ error: 'El archivo Excel está vacío' });
+       }
+       
+       // Verificamos si ya es el formato limpio (app.js espera 'nombre', 'precio')
+       if (data[0].nombre !== undefined || data[0].Nombre !== undefined) {
+          fs.copyFileSync(req.file.path, PRODUCTS_EXCEL);
+          return res.json({ message: `Se importaron ${data.length} productos correctamente`, count: data.length });
+       } else {
+          // Es un Excel en formato raw (como el de Google Sheets).
+          const csvStr = XLSX.utils.sheet_to_csv(sheet);
+          const lines = csvStr.split(/[\n\r]+/).filter(Boolean);
+          const products = convertLinesToProducts(lines, ',');
+          if (products.length === 0) {
+             return res.status(400).json({ error: 'No se reconocieron productos válidos en este Excel. Asegurate de que tenga las categorías (ej: 1 - ACEITES).' });
+          }
+          saveProducts(products);
+          return res.json({ message: `Se importaron ${products.length} productos correctamente`, count: products.length });
+       }
     }
-    
-    // Copy to data folder
-    fs.copyFileSync(req.file.path, PRODUCTS_EXCEL);
-    
-    res.json({ message: `Se importaron ${data.length} productos correctamente`, count: data.length });
   } catch (err) {
     res.status(500).json({ error: 'Error al procesar el archivo: ' + err.message });
   }
@@ -196,69 +248,11 @@ app.post('/api/products/import-csv', (req, res) => {
       lines = data.split(/[\n\r]+/).map(l => l.replace(/;+$/, '').trim()).filter(Boolean);
     }
 
-    const products = [];
-    let currentCategory = '';
-    let id = 1;
+    let delimiter = ',';
+    if (data.includes('\t')) delimiter = '\t';
+    else if (data.includes(';')) delimiter = ';';
 
-    for (const line of lines) {
-      const cols = line.split(';').map(c => c.trim());
-      const first = cols[0] || '';
-      if (!first) continue;
-
-      // Skip known header/meta lines
-      if (/^(LISTA|INDICE|Urquiza|Rivadavia|Pedidos|Con tu)/i.test(first)) continue;
-      if (first === '#REF!' || first === 'aaa') continue;
-
-      // Category header: "N - CATEGORY NAME"
-      const catMatch = first.match(/^(\d+)\s*[-–]\s*(.+)$/);
-      if (catMatch) {
-        const rawCat = catMatch[2].trim();
-        currentCategory = rawCat.split(/\s+/).map(w => {
-          const up = w.toUpperCase();
-          if (['Y','DE','E','EN','A','SIN','CON','POR','PARA'].includes(up) && w.length <= 4) return w.toLowerCase();
-          return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-        }).join(' ');
-        continue;
-      }
-
-      // Skip index lines (just number + category name)
-      if (/^\d+$/.test(first) && cols[1] && /^[A-Z]/.test(cols[1])) continue;
-      // Skip price-format header lines like "$ por unidad"
-      if (/^\$\s*por/i.test(first)) continue;
-      // Skip if no category assigned yet
-      if (!currentCategory) continue;
-
-      // Try to get price from cols[1], or cols[2] if cols[1] is a price-format label
-      let priceStr = cols[1] || '';
-      if (/^\$\s*por/i.test(priceStr)) {
-        priceStr = cols[2] || '';
-      }
-      const price = parsePriceValue(priceStr);
-
-      // Skip non-product lines
-      if (first.length < 3) continue;
-      if (/^\$/.test(first) && first.length < 12) continue;
-
-      // Extract weight from name
-      const wm = first.match(/(\d+\s*(ml|cc|gr|grs|kg|lt|lts|litro|litros))\b/i);
-      let nombre = first.replace(/^["']|["']$/g, '').trim();
-      nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
-
-      products.push({
-        id: id++,
-        nombre,
-        descripcion: '',
-        precio: price || 0,
-        categoria: currentCategory,
-        imagen: '',
-        stock: 999,
-        destacado: false,
-        peso: wm ? wm[1] : '',
-        marca: 'La Familia',
-        activo: price > 0
-      });
-    }
-
+    const products = convertLinesToProducts(lines, delimiter);
     if (products.length === 0) {
       return res.status(400).json({ error: 'No se encontraron productos válidos en los datos. Asegurate de incluir las líneas de categoría (ej: 1 - ACEITES) antes de los productos.' });
     }
@@ -287,7 +281,7 @@ function parsePriceValue(str) {
 }
 
 // ========== GOOGLE SHEETS SYNC ==========
-function parseCSVRow(str) {
+function parseCSVRow(str, delimiter = ',') {
   let result = [];
   let current = '';
   let inQuotes = false;
@@ -298,7 +292,7 @@ function parseCSVRow(str) {
       i++;
     } else if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(current);
       current = '';
     } else {
@@ -309,6 +303,146 @@ function parseCSVRow(str) {
   return result;
 }
 
+function parseCellToVariants(cellText, defaultLabel) {
+  const variants = [];
+  if (!cellText || cellText.trim() === '') return variants;
+  
+  const parts = cellText.split(/(?:\s{2,}|,|-|\|)/).map(p => p.trim()).filter(Boolean);
+  
+  for (let part of parts) {
+    let price = 0;
+    let label = defaultLabel || '';
+    
+    let priceMatch = part.match(/\$\s*([\d.,]+)/);
+    let numMatch = part.match(/^([\d.,]+)\s*[xX]\s*(.+)$/i);
+    
+    if (priceMatch) {
+      price = parsePriceValue(priceMatch[1]);
+      label = part.replace(priceMatch[0], '').replace(/^[xX]\s*/i, '').trim() || defaultLabel;
+    } else if (numMatch) {
+      price = parsePriceValue(numMatch[1]);
+      label = numMatch[2].trim() || defaultLabel;
+    } else {
+      const tokens = part.split(/\s+/);
+      let foundPrice = false;
+      for (let i = 0; i < tokens.length; i++) {
+        if (/^[\d.,]+$/.test(tokens[i])) {
+          let val = parsePriceValue(tokens[i]);
+          if (val > 0 && val !== 100 && val !== 500 && val !== 250) { 
+            price = val;
+            let labelTokens = [...tokens];
+            labelTokens.splice(i, 1);
+            label = labelTokens.join(' ').replace(/^[xX]\s*/i, '').trim() || defaultLabel;
+            foundPrice = true;
+            break;
+          }
+        }
+      }
+      if (!foundPrice) continue;
+    }
+    
+    label = label.replace(/por\s+/i, '').replace(/unidad/i, '').trim();
+    if (label.toLowerCase() === 'u') label = '';
+    if (price > 0) variants.push({ price, label });
+  }
+  return variants;
+}
+
+function convertLinesToProducts(lines, delimiter) {
+  const products = [];
+  let currentCategory = '';
+  let catColLabels = ['', '', ''];
+  let id = 1;
+
+  for (const line of lines) {
+    const cols = parseCSVRow(line, delimiter).map(c => c.replace(/^["']|["']$/g, '').trim());
+    let first = cols[0] || '';
+    
+    // Sometimes Google Sheets exports have empty first column but data in second
+    if (first === '' && cols[1]) {
+       cols.shift();
+       first = cols[0] || '';
+    }
+    
+    if (!first) continue;
+
+    if (/^(LISTA|INDICE|Urquiza|Rivadavia|Pedidos|Con tu|HELADERA|FREEZER)/i.test(first)) continue;
+    if (first === '#REF!' || first === 'aaa') continue;
+
+    const catMatch = first.match(/^(\d+)\s*[-–]\s*(.+)$/);
+    if (catMatch) {
+      const rawCat = catMatch[2].trim();
+      currentCategory = rawCat.split(/\s+/).map(w => {
+        const up = w.toUpperCase();
+        if (['Y','DE','E','EN','A','SIN','CON','POR','PARA'].includes(up) && w.length <= 4) return w.toLowerCase();
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      }).join(' ');
+      
+      let labels = [];
+      for (let i = 1; i < cols.length; i++) {
+         let lab = cols[i] ? cols[i].replace(/^\$/, '').replace(/por\s+/i, '').trim() : '';
+         if (lab) labels.push(lab);
+      }
+      catColLabels = ['', ...labels];
+      continue;
+    }
+
+    if (/^\d+$/.test(first) && cols[1] && /^[A-Z]/.test(cols[1])) continue;
+    if (/^\$\s*por/i.test(first)) continue;
+    if (!currentCategory) continue;
+    if (first.length < 3) continue;
+
+    const wm = first.match(/(\d+\s*(ml|cc|gr|grs|kg|lt|lts|litro|litros|mk|oz|lb|cm|mm))\b/i);
+    const sizeFromName = wm ? wm[1] : '';
+    let nombre = first.charAt(0).toUpperCase() + first.slice(1);
+
+    let allVariants = [];
+    for (let c = 1; c < cols.length; c++) {
+      let colText = cols[c];
+      if (!colText) continue;
+      
+      // Check if it's an image URL column
+      if (typeof colText === 'string' && colText.startsWith('http')) {
+          continue;
+      }
+      
+      let defLabel = catColLabels[c] || '';
+      let cellVariants = parseCellToVariants(colText, defLabel);
+      
+      if (cellVariants.length === 0 && c === 1) {
+         let directVal = parsePriceValue(colText);
+         if (directVal > 0) {
+            cellVariants.push({ price: directVal, label: defLabel });
+         }
+      }
+      allVariants.push(...cellVariants);
+    }
+    
+    if (allVariants.length === 0) continue;
+    
+    const imgUrlCol = cols.find(c => typeof c === 'string' && c.startsWith('http'));
+
+    for (let v of allVariants) {
+      let finalLabel = v.label || sizeFromName;
+      
+      products.push({
+        id: id++,
+        nombre: nombre,
+        descripcion: '',
+        precio: v.price || 0,
+        categoria: currentCategory,
+        imagen: imgUrlCol || '',
+        stock: 999,
+        destacado: false,
+        peso: finalLabel,
+        marca: 'La Familia',
+        activo: v.price > 0
+      });
+    }
+  }
+  return products;
+}
+
 const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTpKijmFFMP1Ea4_wT1_X7bkoFQqIl1XbO73ywCDkDq2ImDOE6dqQ272Sa_nZOw8-Eu7hrISgcLCS5h/pub?gid=2102913718&single=true&output=csv';
 
 async function syncGoogleSheetsProducts() {
@@ -317,69 +451,7 @@ async function syncGoogleSheetsProducts() {
     if (!res.ok) throw new Error('Network response was not ok');
     const data = await res.text();
     const lines = data.split(/[\n\r]+/).filter(Boolean);
-    const products = [];
-    let currentCategory = '';
-    let id = 1;
-
-    for (const line of lines) {
-      const cols = parseCSVRow(line).map(c => c.trim());
-      
-      let productName = '';
-      let priceStr = '';
-      
-      if (cols[0] === '' && cols[1]) {
-         productName = cols[1];
-         priceStr = cols[2] || '';
-      } else {
-         productName = cols[0] || '';
-         priceStr = cols[1] || '';
-         if (/^\$\s*por/i.test(priceStr)) priceStr = cols[2] || '';
-      }
-      
-      if (!productName) continue;
-      
-      if (/^(LISTA|INDICE|Urquiza|Rivadavia|Pedidos|Con tu)/i.test(productName)) continue;
-      if (productName === '#REF!' || productName === 'aaa') continue;
-      
-      const catMatch = productName.match(/^(\d+)\s*[-–]\s*(.+)$/);
-      if (catMatch) {
-        const rawCat = catMatch[2].trim();
-        currentCategory = rawCat.split(/\s+/).map(w => {
-          const up = w.toUpperCase();
-          if (['Y','DE','E','EN','A','SIN','CON','POR','PARA'].includes(up) && w.length <= 4) return w.toLowerCase();
-          return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-        }).join(' ');
-        continue;
-      }
-      
-      if (/^\d+$/.test(productName) && cols[1] && /^[A-Z]/.test(cols[1])) continue;
-      if (/^\$\s*por/i.test(productName)) continue;
-      if (!currentCategory) continue;
-      
-      const price = parsePriceValue(priceStr);
-      if (productName.length < 3) continue;
-      if (/^\$/.test(productName) && productName.length < 12) continue;
-      
-      const wm = productName.match(/(\d+\s*(ml|cc|gr|grs|kg|lt|lts|litro|litros))\b/i);
-      let nombre = productName.replace(/^["']|["']$/g, '').trim();
-      nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
-      
-      const imgUrlCol = cols.find(c => typeof c === 'string' && c.startsWith('http'));
-      
-      products.push({
-        id: id++,
-        nombre,
-        descripcion: '',
-        precio: price || 0,
-        categoria: currentCategory,
-        imagen: imgUrlCol || '',
-        stock: 999,
-        destacado: false,
-        peso: wm ? wm[1] : '',
-        marca: 'La Familia',
-        activo: price > 0
-      });
-    }
+    const products = convertLinesToProducts(lines, ',');
     
     if (products.length > 100) {
       // Apply local overrides before saving
