@@ -127,11 +127,15 @@
   .nav-categories{overflow-x:auto}
   .nav-cat-link{padding:10px 12px;font-size:.75rem}
   .info-bar .nav-container{font-size:.7rem;gap:12px}
-  .intro-banner{margin-top:155px;padding:16px 0}
-  .intro-content{flex-direction:column;text-align:center;gap:12px}
-  .intro-title{font-size:1.2rem}
-  .intro-subtitle{font-size:.82rem}
-  .intro-cta{font-size:.82rem;padding:8px 18px}
+  .hero-banner{margin-top:110px}
+  .hero-banner-img{max-height:180px}
+  .benefits-grid{grid-template-columns:1fr;gap:12px}
+  .benefit-item{justify-content:flex-start;padding:0 10px}
+  .benefit-item i{font-size:1.2rem}
+  .categories-section{padding:20px 0}
+  .section-heading{font-size:.95rem;margin-bottom:16px;padding:8px 0}
+  .categories-image-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .cat-label{font-size:.75rem!important}
   .shop-main{padding:12px 0 40px}
   .shop-header{flex-direction:column;align-items:flex-start}
   .shop-title{font-size:1.2rem}

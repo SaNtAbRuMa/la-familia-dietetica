@@ -57,17 +57,48 @@
     </div>
   </nav>
 
-  <!-- ============ INTRO BANNER ============ -->
-  <section class="intro-banner">
+  <!-- ============ HERO BANNER ============ -->
+  <section class="hero-banner">
+    <a href="#tienda">
+      <img src="/img/hero-banner.png" alt="Dietética La Familia - Alimentos saludables y naturales" class="hero-banner-img">
+    </a>
+  </section>
+
+  <!-- ============ BENEFITS BAR ============ -->
+  <section class="benefits-bar">
     <div class="container">
-      <div class="intro-content">
-        <div class="intro-text">
-          <h1 class="intro-title">🌿 La Familia <span>Dietética</span></h1>
-          <p class="intro-subtitle">Alimentos saludables, naturales y orgánicos. +2000 productos para toda la familia.</p>
+      <div class="benefits-grid">
+        <div class="benefit-item">
+          <i class="fas fa-truck"></i>
+          <div>
+            <strong>Envío GRATIS</strong>
+            <span>En compras mayores a $20.000</span>
+          </div>
         </div>
-        <a href="https://wa.me/542284638849" target="_blank" class="intro-cta">
-          <i class="fab fa-whatsapp"></i> Pedí por WhatsApp
-        </a>
+        <div class="benefit-item">
+          <i class="fas fa-store"></i>
+          <div>
+            <strong>Retiro en Sucursal</strong>
+            <span>Urquiza 1315 / Rivadavia 2581</span>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <i class="fas fa-credit-card"></i>
+          <div>
+            <strong>Elegí cómo pagar</strong>
+            <span>Efectivo, transferencia o tarjeta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CATEGORIES GRID ============ -->
+  <section class="categories-section">
+    <div class="container">
+      <h2 class="section-heading">CATEGORÍAS</h2>
+      <div class="categories-image-grid" id="categories-image-grid">
+        <!-- Loaded dynamically -->
       </div>
     </div>
   </section>
@@ -75,9 +106,8 @@
   <!-- ============ MAIN SHOP ============ -->
   <main class="shop-main" id="tienda">
     <div class="container">
-      <!-- Breadcrumb / Title -->
       <div class="shop-header">
-        <h1 class="shop-title" id="shop-title">TODOS LOS PRODUCTOS</h1>
+        <h2 class="shop-title" id="shop-title">TODOS LOS PRODUCTOS</h2>
         <div class="shop-sort">
           <label>Ordenar por</label>
           <select id="sort-select">
@@ -89,7 +119,6 @@
           </select>
         </div>
       </div>
-      <!-- Products grid -->
       <div class="products-grid" id="all-products">
         <!-- Loaded dynamically -->
       </div>

@@ -72,6 +72,7 @@ async function loadProducts() {
     allProducts = Array.from(groupedMap.values());
     
     renderNavCategories();
+    renderCategoriesGrid();
     renderAllProducts();
     initLoadMore();
   } catch (e) {
@@ -96,7 +97,32 @@ function renderNavCategories() {
     const title = document.getElementById('shop-title');
     if (title) title.textContent = cat === 'all' ? 'TODOS LOS PRODUCTOS' : cat.toUpperCase();
     renderAllProducts(cat, document.getElementById('sort-select').value);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('tienda')?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+function renderCategoriesGrid() {
+  const grid = document.getElementById('categories-image-grid');
+  if (!grid) return;
+  const cats = {};
+  allProducts.forEach(p => { if (p.categoria) cats[p.categoria] = (cats[p.categoria] || 0) + 1; });
+  grid.innerHTML = Object.keys(cats).map(name => {
+    const img = categoryImages[name] || defaultFoodImg;
+    return `<div class="cat-image-card" data-category="${name}">
+      <img src="${img}" alt="${name}" loading="lazy">
+      <div class="cat-overlay"><span class="cat-label">${name}</span></div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.cat-image-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const cat = card.dataset.category;
+      const navCats = document.getElementById('nav-categories');
+      if (navCats) navCats.querySelectorAll('.nav-cat-link').forEach(l => l.classList.toggle('active', l.dataset.category === cat));
+      const title = document.getElementById('shop-title');
+      if (title) title.textContent = cat.toUpperCase();
+      renderAllProducts(cat, document.getElementById('sort-select').value);
+      document.getElementById('tienda')?.scrollIntoView({ behavior: 'smooth' });
+    });
   });
 }
 
@@ -155,37 +181,42 @@ function initLoadMore() {
 }
 
 const categoryImages = {
-  'Aceites, Vinagres y Salsas': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=400&fit=crop',
-  'Avenas y Sojas': 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400&h=400&fit=crop',
-  'Bebidas': 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop',
-  'Cereales y Granolas': 'https://images.unsplash.com/photo-1517093602195-b40af9688b46?w=400&h=400&fit=crop',
-  'Complementos Dietarios': 'https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=400&h=400&fit=crop',
-  'Congelados y Refrigerados': 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400&h=400&fit=crop',
-  'Cosmetica Saludable': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=400&fit=crop',
-  'Cotillon': 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=400&fit=crop',
-  'Endulzantes': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop',
-  'Especias': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=400&fit=crop',
-  'Feculas y Harinas': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop',
-  'Fideos Varios': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=400&fit=crop',
-  'Frutas Deshidratadas': 'https://images.unsplash.com/photo-1596591868264-05856e155c1e?w=400&h=400&fit=crop',
-  'Frutos Secos': 'https://images.unsplash.com/photo-1599599810694-b5b37304c041?w=400&h=400&fit=crop',
-  'Galletitas': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&h=400&fit=crop',
-  'Galletitas sin Azucar': 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&h=400&fit=crop',
-  'Golosinas Saludables': 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&h=400&fit=crop',
-  'Herboristeria': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=400&fit=crop',
-  'Infusiones': 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=400&fit=crop',
-  'Legumbres': 'https://images.unsplash.com/photo-1515543904738-7f29a3567146?w=400&h=400&fit=crop',
-  'Mermeladas y Dulces': 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=400&fit=crop',
-  'Miel': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop',
-  'Pastas y Mantequillas de Mani': 'https://images.unsplash.com/photo-1612187209234-d03e7babe937?w=400&h=400&fit=crop',
-  'Premezclas y Rebozadores sin Tacc': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop',
-  'Productos Vegetarianos y Veganos': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop',
-  'Reposteria': 'https://images.unsplash.com/photo-1486427944544-d2c246c4df6c?w=400&h=400&fit=crop',
-  'Sales': 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=400&h=400&fit=crop',
-  'Semillas': 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400&h=400&fit=crop',
-  'Snacks': 'https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=400&h=400&fit=crop',
-  'Tostadas y Grisines': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=400&fit=crop',
-  'Varios': 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=400&h=400&fit=crop',
+  'Aceites, Vinagres y Salsas': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=300&fit=crop',
+  'Avenas y Sojas': 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400&h=300&fit=crop',
+  'Bebidas': 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop',
+  'Cereales y Granolas': 'https://images.unsplash.com/photo-1517093602195-b40af9688b46?w=400&h=300&fit=crop',
+  'Complementos Dietarios': 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400&h=300&fit=crop',
+  'Congelados y Refrigerados': 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&h=300&fit=crop',
+  'Cosmetica Saludable': 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=400&h=300&fit=crop',
+  'Cotillon': 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=300&fit=crop',
+  'Endulzantes': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop',
+  'Especias': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop',
+  'Feculas y Harinas': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
+  'Fideos Varios': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop',
+  'Frutas Deshidratadas': 'https://images.unsplash.com/photo-1596591868264-05856e155c1e?w=400&h=300&fit=crop',
+  'Frutos Secos': 'https://images.unsplash.com/photo-1599599810694-b5b37304c041?w=400&h=300&fit=crop',
+  'Galletitas': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&h=300&fit=crop',
+  'Galletitas sin Azucar': 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&h=300&fit=crop',
+  'Galletitas, Cereales y Pan sin Tacc': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop',
+  'Golosinas Saludables': 'https://images.unsplash.com/photo-1581798459219-318e76ade559?w=400&h=300&fit=crop',
+  'Herboristeria': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=300&fit=crop',
+  'Infusiones': 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=300&fit=crop',
+  'Legumbres': 'https://images.unsplash.com/photo-1515543904738-7f29a3567146?w=400&h=300&fit=crop',
+  'Mermeladas y Dulces': 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop',
+  'Miel': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop',
+  'Pastas (Aptas para Diabeticos)': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop',
+  'Pastas sin Tacc': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop',
+  'Pastas y Mantequillas de Mani': 'https://images.unsplash.com/photo-1612187209234-d03e7babe937?w=400&h=300&fit=crop',
+  'Premezclas y Rebozadores sin Tacc': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
+  'Productos Arcor': 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&h=300&fit=crop',
+  'Productos La Francia': 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&h=300&fit=crop',
+  'Productos Vegetarianos y Veganos': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
+  'Reposteria': 'https://images.unsplash.com/photo-1486427944544-d2c246c4df6c?w=400&h=300&fit=crop',
+  'Sales': 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=400&h=300&fit=crop',
+  'Semillas': 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400&h=300&fit=crop',
+  'Snacks': 'https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=400&h=300&fit=crop',
+  'Tostadas y Grisines': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop',
+  'Varios': 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=400&h=300&fit=crop',
 };
 const defaultFoodImg = 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=400&h=400&fit=crop';
 
@@ -220,12 +251,12 @@ function productCard(p) {
       <div class="product-card-image">
         ${imgSrc}
         <div class="placeholder-icon" style="${p.imagen ? 'display:none' : 'display:flex'}"><i class="fas fa-seedling"></i></div>
-        <button class="product-quick-add" data-id="${p.id}" title="Agregar al carrito"><i class="fas fa-cart-plus"></i></button>
       </div>
       <div class="product-card-body">
         <h3 class="product-name"><a href="#" class="product-link" data-id="${p.id}">${p.nombre}</a></h3>
         ${sizeSelector}
         <div class="product-category">${p.categoria}</div>
+        <button class="product-add-btn" data-id="${p.id}"><i class="fas fa-cart-plus"></i> AGREGAR</button>
       </div>
     </div>`;
 }
@@ -239,7 +270,7 @@ document.getElementById('sort-select')?.addEventListener('change', e => {
 });
 
 function attachProductEvents(container) {
-  container.querySelectorAll('.product-quick-add').forEach(btn => {
+  container.querySelectorAll('.product-add-btn').forEach(btn => {
     btn.addEventListener('click', e => { 
       e.stopPropagation(); 
       const card = btn.closest('.product-card');
