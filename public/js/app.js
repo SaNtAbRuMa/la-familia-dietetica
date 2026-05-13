@@ -13,8 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initCart();
   initCheckout();
   initScrollEffects();
-  initContactForm();
-  initParticles();
   updateCartUI();
   
   const urlParams = new URLSearchParams(window.location.search);
@@ -73,8 +71,7 @@ async function loadProducts() {
 
     allProducts = Array.from(groupedMap.values());
     
-    renderFeatured();
-    renderCategories();
+    renderNavCategories();
     renderAllProducts();
     initLoadMore();
   } catch (e) {
@@ -82,11 +79,25 @@ async function loadProducts() {
   }
 }
 
-function renderFeatured() {
-  const grid = document.getElementById('featured-products');
-  const featured = allProducts.filter(p => p.destacado);
-  grid.innerHTML = featured.map(p => productCard(p)).join('');
-  attachProductEvents(grid);
+function renderNavCategories() {
+  const navCats = document.getElementById('nav-categories');
+  if (!navCats) return;
+  const cats = {};
+  allProducts.forEach(p => { if (p.categoria) cats[p.categoria] = (cats[p.categoria] || 0) + 1; });
+  navCats.innerHTML = '<a href="#" class="nav-cat-link active" data-category="all">TODOS</a>' +
+    Object.keys(cats).map(c => `<a href="#" class="nav-cat-link" data-category="${c}">${c.toUpperCase()}</a>`).join('');
+  navCats.addEventListener('click', e => {
+    e.preventDefault();
+    const link = e.target.closest('.nav-cat-link');
+    if (!link) return;
+    navCats.querySelectorAll('.nav-cat-link').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    const cat = link.dataset.category;
+    const title = document.getElementById('shop-title');
+    if (title) title.textContent = cat === 'all' ? 'TODOS LOS PRODUCTOS' : cat.toUpperCase();
+    renderAllProducts(cat, document.getElementById('sort-select').value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 }
 
 function renderAllProducts(category = 'all', sort = 'default', search = '') {
@@ -209,56 +220,23 @@ function productCard(p) {
       <div class="product-card-image">
         ${imgSrc}
         <div class="placeholder-icon" style="${p.imagen ? 'display:none' : 'display:flex'}"><i class="fas fa-seedling"></i></div>
-        ${p.destacado ? '<span class="product-badge">⭐ Destacado</span>' : ''}
-        <button class="product-quick-add" data-id="${p.id}" title="Agregar al carrito"><i class="fas fa-plus"></i></button>
+        <button class="product-quick-add" data-id="${p.id}" title="Agregar al carrito"><i class="fas fa-cart-plus"></i></button>
       </div>
       <div class="product-card-body">
-        <div class="product-category">${p.categoria}</div>
         <h3 class="product-name"><a href="#" class="product-link" data-id="${p.id}">${p.nombre}</a></h3>
-        <p class="product-desc">${p.descripcion}</p>
         ${sizeSelector}
+        <div class="product-category">${p.categoria}</div>
       </div>
     </div>`;
 }
 
 const categoryIcons = { 'Cereales y Granolas': '🥣', 'Frutos Secos': '🥜', 'Semillas': '🌻', 'Aceites': '🫒', 'Harinas': '🌾', 'Endulzantes': '🍯', 'Untables': '🥜', 'Tés e Infusiones': '🍵', 'Suplementos': '💪', 'Superfoods': '🌿', 'Snacks': '🍪', 'Bebidas': '🥛', 'Legumbres': '🫘' };
 
-function renderCategories() {
-  const grid = document.getElementById('categories-grid');
-  const tabs = document.getElementById('filter-tabs');
-  const cats = {};
-  allProducts.forEach(p => { if (p.categoria) cats[p.categoria] = (cats[p.categoria] || 0) + 1; });
-  grid.innerHTML = Object.entries(cats).map(([name, count]) => `
-    <div class="category-card" data-category="${name}">
-      <span class="category-icon">${categoryIcons[name] || '📦'}</span>
-      <div class="category-name">${name}</div>
-      <div class="category-count">${count} productos</div>
-    </div>`).join('');
-  tabs.innerHTML = '<button class="filter-tab active" data-category="all">Todos</button>' +
-    Object.keys(cats).map(c => `<button class="filter-tab" data-category="${c}">${c}</button>`).join('');
-
-  grid.querySelectorAll('.category-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const cat = card.dataset.category;
-      document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
-      setTimeout(() => {
-        tabs.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.category === cat));
-        renderAllProducts(cat, document.getElementById('sort-select').value);
-      }, 400);
-    });
-  });
-  tabs.addEventListener('click', e => {
-    if (e.target.classList.contains('filter-tab')) {
-      tabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-      e.target.classList.add('active');
-      renderAllProducts(e.target.dataset.category, document.getElementById('sort-select').value);
-    }
-  });
-  document.getElementById('sort-select').addEventListener('change', e => {
-    const activeCat = tabs.querySelector('.filter-tab.active')?.dataset.category || 'all';
-    renderAllProducts(activeCat, e.target.value);
-  });
-}
+// Sort control
+document.getElementById('sort-select')?.addEventListener('change', e => {
+  const activeCat = document.querySelector('.nav-cat-link.active')?.dataset.category || 'all';
+  renderAllProducts(activeCat, e.target.value);
+});
 
 function attachProductEvents(container) {
   container.querySelectorAll('.product-quick-add').forEach(btn => {
@@ -597,40 +575,30 @@ function sendOrderToWhatsApp() {
 
 // ========== NAVBAR ==========
 function initNavbar() {
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 50);
-    document.getElementById('scroll-top').classList.toggle('visible', window.scrollY > 500);
-  });
   document.getElementById('scroll-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  document.getElementById('mobile-menu-toggle')?.addEventListener('click', () => {
-    document.getElementById('nav-links').classList.toggle('active');
-  });
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      document.getElementById('nav-links').classList.remove('active');
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-    });
+  window.addEventListener('scroll', () => {
+    document.getElementById('scroll-top')?.classList.toggle('visible', window.scrollY > 500);
   });
 }
 
 // ========== SEARCH ==========
 function initSearch() {
-  const bar = document.getElementById('search-bar');
   const input = document.getElementById('search-input');
-  document.getElementById('search-toggle')?.addEventListener('click', () => { bar.classList.toggle('active'); if (bar.classList.contains('active')) input.focus(); });
-  document.getElementById('search-close')?.addEventListener('click', () => { bar.classList.remove('active'); input.value = ''; renderAllProducts(); });
+  if (!input) return;
   let debounce;
   input.addEventListener('input', () => {
     clearTimeout(debounce);
     debounce = setTimeout(() => {
       const q = input.value.trim();
+      const title = document.getElementById('shop-title');
       if (q.length >= 2) {
-        document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.category === 'all'));
+        document.querySelectorAll('.nav-cat-link').forEach(l => l.classList.toggle('active', l.dataset.category === 'all'));
+        if (title) title.textContent = `RESULTADOS: "${q.toUpperCase()}"`;
         renderAllProducts('all', 'default', q);
-      } else if (q.length === 0) renderAllProducts();
+      } else if (q.length === 0) {
+        if (title) title.textContent = 'TODOS LOS PRODUCTOS';
+        renderAllProducts();
+      }
     }, 300);
   });
 }
@@ -640,54 +608,10 @@ function initScrollEffects() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } });
   }, { threshold: 0.1 });
-  document.querySelectorAll('.product-card, .category-card, .benefit-card').forEach(el => {
-    el.style.opacity = '0'; el.style.transform = 'translateY(30px)'; el.style.transition = 'opacity .6s ease, transform .6s ease';
+  document.querySelectorAll('.product-card').forEach(el => {
+    el.style.opacity = '0'; el.style.transform = 'translateY(20px)'; el.style.transition = 'opacity .4s ease, transform .4s ease';
     observer.observe(el);
   });
-  // Counter animation
-  const counterObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting && !e.target.dataset.counted) {
-        e.target.dataset.counted = 'true';
-        animateCounter(e.target);
-      }
-    });
-  }, { threshold: 0.5 });
-  document.querySelectorAll('.hero-stat-number').forEach(el => counterObserver.observe(el));
-}
-
-function animateCounter(el) {
-  const target = parseInt(el.dataset.count);
-  let current = 0;
-  const step = target / 60;
-  const timer = setInterval(() => {
-    current += step;
-    if (current >= target) { current = target; clearInterval(timer); }
-    el.textContent = Math.floor(current).toLocaleString('es-AR');
-  }, 25);
-}
-
-// ========== CONTACT FORM ==========
-function initContactForm() {
-  document.getElementById('contact-form')?.addEventListener('submit', e => {
-    e.preventDefault();
-    showToast('¡Mensaje enviado! Te responderemos pronto.', 'success');
-    e.target.reset();
-  });
-}
-
-// ========== PARTICLES ==========
-function initParticles() {
-  const container = document.getElementById('hero-particles');
-  if (!container) return;
-  for (let i = 0; i < 30; i++) {
-    const p = document.createElement('div');
-    p.style.cssText = `position:absolute;width:${Math.random()*4+2}px;height:${Math.random()*4+2}px;background:rgba(82,183,136,${Math.random()*.3+.1});border-radius:50%;left:${Math.random()*100}%;top:${Math.random()*100}%;animation:float ${Math.random()*10+10}s linear infinite;`;
-    container.appendChild(p);
-  }
-  const style = document.createElement('style');
-  style.textContent = '@keyframes float{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-100vh) translateX(${Math.random()*100-50}px);opacity:0}}';
-  document.head.appendChild(style);
 }
 
 // ========== TOAST ==========
