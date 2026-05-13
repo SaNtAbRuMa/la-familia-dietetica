@@ -50,8 +50,9 @@ input,select,textarea{font-family:inherit;font-size:1rem}
 /* Category bar */
 .nav-categories-bar{border-bottom:1px solid var(--border);background:#fff;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .nav-categories-bar::-webkit-scrollbar{display:none}
-.nav-categories-bar .nav-container{padding:0 20px}
-.nav-categories{display:flex;gap:0;white-space:nowrap}
+.nav-categories-bar .nav-container{padding:0 20px;overflow:visible}
+.nav-categories{display:flex;gap:0;white-space:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+.nav-categories::-webkit-scrollbar{display:none}
 .nav-cat-link{padding:12px 18px;font-size:.82rem;font-weight:600;color:#444;letter-spacing:.5px;text-transform:uppercase;border-bottom:3px solid transparent;transition:var(--transition)}
 .nav-cat-link:hover{color:var(--primary)}
 .nav-cat-link.active{color:var(--primary);border-bottom-color:var(--primary)}
