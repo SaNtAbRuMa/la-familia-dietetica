@@ -127,7 +127,12 @@
   .nav-categories{overflow-x:auto}
   .nav-cat-link{padding:10px 12px;font-size:.75rem}
   .info-bar .nav-container{font-size:.7rem;gap:12px}
-  .shop-main{margin-top:130px;padding:16px 0 40px}
+  .intro-banner{margin-top:155px;padding:16px 0}
+  .intro-content{flex-direction:column;text-align:center;gap:12px}
+  .intro-title{font-size:1.2rem}
+  .intro-subtitle{font-size:.82rem}
+  .intro-cta{font-size:.82rem;padding:8px 18px}
+  .shop-main{padding:12px 0 40px}
   .shop-header{flex-direction:column;align-items:flex-start}
   .shop-title{font-size:1.2rem}
   .products-grid{grid-template-columns:repeat(2,1fr);gap:12px}

@@ -63,7 +63,18 @@ input,select,textarea{font-family:inherit;font-size:1rem}
 .info-bar i{font-size:.7rem}
 
 /* SHOP MAIN */
-.shop-main{margin-top:140px;padding:30px 0 60px;min-height:70vh}
+/* INTRO BANNER */
+.intro-banner{margin-top:160px;background:linear-gradient(135deg,#e8f5e9 0%,#f1f8f3 40%,#fff 100%);border-bottom:1px solid #e0e0e0;padding:24px 0}
+.intro-content{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.intro-title{font-size:1.5rem;color:var(--primary-dark);margin-bottom:4px}
+.intro-title span{color:var(--primary-light)}
+.intro-subtitle{font-size:.9rem;color:var(--text-muted);line-height:1.4}
+.intro-cta{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--radius);background:#25d366;color:#fff;font-weight:600;font-size:.9rem;white-space:nowrap;transition:var(--transition)}
+.intro-cta:hover{background:#1da851;transform:translateY(-2px);box-shadow:0 4px 12px rgba(37,211,102,.3)}
+.intro-cta i{font-size:1.1rem}
+
+/* SHOP MAIN */
+.shop-main{padding:24px 0 60px;min-height:70vh}
 .shop-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px}
 .shop-title{font-size:1.6rem;color:var(--text-dark);letter-spacing:.5px}
 .shop-sort{display:flex;align-items:center;gap:8px}
