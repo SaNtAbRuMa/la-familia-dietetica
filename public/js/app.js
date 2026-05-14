@@ -193,25 +193,25 @@ const categoryImages = {
   'Especias': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop',
   'Feculas y Harinas': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
   'Fideos Varios': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop',
-  'Frutas Deshidratadas': 'https://images.unsplash.com/photo-1596591868264-05856e155c1e?w=400&h=300&fit=crop',
+  'Frutas Deshidratadas': 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400&h=300&fit=crop',
   'Frutos Secos': 'https://images.unsplash.com/photo-1599599810694-b5b37304c041?w=400&h=300&fit=crop',
   'Galletitas': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&h=300&fit=crop',
   'Galletitas sin Azucar': 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&h=300&fit=crop',
   'Galletitas, Cereales y Pan sin Tacc': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop',
-  'Golosinas Saludables': 'https://images.unsplash.com/photo-1581798459219-318e76ade559?w=400&h=300&fit=crop',
+  'Golosinas Saludables': 'https://images.unsplash.com/photo-1563262924-641a8b3d397f?w=400&h=300&fit=crop',
   'Herboristeria': 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=300&fit=crop',
   'Infusiones': 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=300&fit=crop',
-  'Legumbres': 'https://images.unsplash.com/photo-1515543904738-7f29a3567146?w=400&h=300&fit=crop',
+  'Legumbres': 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=400&h=300&fit=crop',
   'Mermeladas y Dulces': 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop',
   'Miel': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop',
   'Pastas (Aptas para Diabeticos)': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop',
   'Pastas sin Tacc': 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop',
-  'Pastas y Mantequillas de Mani': 'https://images.unsplash.com/photo-1612187209234-d03e7babe937?w=400&h=300&fit=crop',
+  'Pastas y Mantequillas de Mani': 'https://images.unsplash.com/photo-1598511726623-d2e9996892f0?w=400&h=300&fit=crop',
   'Premezclas y Rebozadores sin Tacc': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
   'Productos Arcor': 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&h=300&fit=crop',
   'Productos La Francia': 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&h=300&fit=crop',
   'Productos Vegetarianos y Veganos': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
-  'Reposteria': 'https://images.unsplash.com/photo-1486427944544-d2c246c4df6c?w=400&h=300&fit=crop',
+  'Reposteria': 'https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81?w=400&h=300&fit=crop',
   'Sales': 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=400&h=300&fit=crop',
   'Semillas': 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400&h=300&fit=crop',
   'Snacks': 'https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=400&h=300&fit=crop',
@@ -250,7 +250,7 @@ function productCard(p) {
     <div class="product-card" data-id="${p.id}">
       <div class="product-card-image">
         ${imgSrc}
-        <div class="placeholder-icon" style="${p.imagen ? 'display:none' : 'display:flex'}"><i class="fas fa-seedling"></i></div>
+        <div class="placeholder-icon" style="display:none"><i class="fas fa-seedling"></i></div>
       </div>
       <div class="product-card-body">
         <h3 class="product-name"><a href="#" class="product-link" data-id="${p.id}">${p.nombre}</a></h3>
