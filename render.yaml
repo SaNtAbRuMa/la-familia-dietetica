@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: la-familia-dietetica
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BASE_URL
+        sync: false
+      - key: MP_ACCESS_TOKEN
+        sync: false
+    healthCheckPath: /api/health

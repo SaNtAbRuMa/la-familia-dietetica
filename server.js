@@ -10,6 +10,16 @@ const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKE
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ENVIO_GRATIS_MINIMO = 20000;
+
+// Ensure required directories exist (for cloud hosting like Render)
+['data', 'uploads', 'public/img'].forEach(dir => {
+  const dirPath = path.join(__dirname, dir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log('📁 Directorio creado:', dir);
+  }
+});
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -58,6 +68,14 @@ const OVERRIDES_FILE = path.join(__dirname, 'data', 'local_overrides.json');
 // Admin credentials (in production, use environment variables and hashing)
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'admin123';
+
+function adminAuth(req, res, next) {
+  const token = req.headers['x-admin-token'];
+  if (!token || !token.startsWith('admin_')) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+  next();
+}
 
 // ========= HELPER FUNCTIONS =========
 
@@ -135,7 +153,7 @@ app.get('/api/products', (req, res) => {
 });
 
 // GET all products (admin - includes inactive)
-app.get('/api/admin/products', (req, res) => {
+app.get('/api/admin/products', adminAuth, (req, res) => {
   const products = readProducts();
   res.json(products);
 });
@@ -149,7 +167,7 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // PUT update product (admin)
-app.put('/api/admin/products/:id', (req, res) => {
+app.put('/api/admin/products/:id', adminAuth, (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const updates = req.body;
@@ -476,44 +494,13 @@ setTimeout(syncGoogleSheetsProducts, 2000);
 setInterval(syncGoogleSheetsProducts, 5 * 60 * 1000);
 
 // POST force sync (admin)
-app.post('/api/admin/sync', async (req, res) => {
+app.post('/api/admin/sync', adminAuth, async (req, res) => {
   try {
     await syncGoogleSheetsProducts();
     const products = readProducts();
     res.json({ message: 'Sincronización completada', count: products.length });
   } catch (err) {
     res.status(500).json({ error: 'Error al sincronizar: ' + err.message });
-  }
-});
-
-// PUT update product (admin)
-app.put('/api/admin/products/:id', (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const updates = req.body;
-    
-    // Read current products
-    const products = readProducts();
-    const index = products.findIndex(p => p.id === id);
-    
-    if (index === -1) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-    
-    // Update in memory
-    products[index] = { ...products[index], ...updates };
-    
-    // Save to overrides
-    const overrides = readOverrides();
-    overrides[id] = { ...(overrides[id] || {}), ...updates };
-    saveOverrides(overrides);
-    
-    // Save to excel
-    saveProducts(products);
-    
-    res.json({ message: 'Producto actualizado', product: products[index] });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al actualizar producto: ' + err.message });
   }
 });
 
@@ -583,6 +570,7 @@ app.post('/api/orders', async (req, res) => {
     let init_point = null;
     if (metodoPago === 'mercadopago' || metodoPago === 'tarjeta') {
        try {
+          const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
           const preference = new Preference(mpClient);
           const mpItems = items.map(i => ({
              title: i.nombre,
@@ -600,9 +588,9 @@ app.post('/api/orders', async (req, res) => {
              body: {
                 items: mpItems,
                 back_urls: {
-                   success: 'https://la-familia-dietetica-production.up.railway.app/?status=success',
-                   failure: 'https://la-familia-dietetica-production.up.railway.app/?status=failure',
-                   pending: 'https://la-familia-dietetica-production.up.railway.app/?status=pending'
+                   success: `${baseUrl}/?status=success`,
+                   failure: `${baseUrl}/?status=failure`,
+                   pending: `${baseUrl}/?status=pending`
                 },
                 auto_return: 'approved',
                 external_reference: newOrder.id
@@ -621,7 +609,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // GET all orders (admin)
-app.get('/api/orders', (req, res) => {
+app.get('/api/orders', adminAuth, (req, res) => {
   const orders = readOrders();
   // Sort by date descending
   orders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -629,7 +617,7 @@ app.get('/api/orders', (req, res) => {
 });
 
 // PUT update order status
-app.put('/api/orders/:id/status', (req, res) => {
+app.put('/api/orders/:id/status', adminAuth, (req, res) => {
   const { estado } = req.body;
   const validStates = ['pendiente', 'confirmado', 'preparando', 'enviado', 'entregado', 'cancelado'];
   
@@ -649,7 +637,7 @@ app.put('/api/orders/:id/status', (req, res) => {
 });
 
 // DELETE order
-app.delete('/api/orders/:id', (req, res) => {
+app.delete('/api/orders/:id', adminAuth, (req, res) => {
   let orders = readOrders();
   const index = orders.findIndex(o => o.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Pedido no encontrado' });
@@ -670,7 +658,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // GET admin stats
-app.get('/api/admin/stats', (req, res) => {
+app.get('/api/admin/stats', adminAuth, (req, res) => {
   const products = readProducts();
   const orders = readOrders();
   
@@ -693,6 +681,11 @@ app.get('/api/admin/stats', (req, res) => {
     totalVentas,
     stockBajo: products.filter(p => (p.stock || 0) <= 5).length
   });
+});
+
+// Health check for Render
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Serve SPA
