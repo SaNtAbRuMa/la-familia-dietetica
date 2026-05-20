@@ -1,3 +1,29 @@
+# Dependencias
 node_modules/
-uploads/*.xlsx
+frontend/node_modules/
+
+# Archivos de build (no se suben — Netlify los genera en el deploy)
+frontend/dist/
+public/
+
+# Variables de entorno — NUNCA subir al repo
 .env
+.env.local
+frontend/.env
+frontend/.env.local
+
+# Archivos de datos temporales y CSVs descargados
+uploads/*.xlsx
+downloaded_sheet.csv
+raw_data.txt
+sheet2.csv
+sheet3.csv
+
+# Archivos de test y scripts no necesarios en producción
+test_full.js
+test_new_parser.js
+create_excel.js
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

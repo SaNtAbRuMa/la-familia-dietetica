@@ -1,0 +1,19 @@
+# Configuración de Netlify para LA FAMILIA
+# Permite automatizar el build, directorio de publicación y enrutamiento del SPA
+
+[build]
+  # Directorio base: Netlify instalará dependencias y ejecutará el build aquí
+  base = "frontend"
+
+  # Comando de construcción
+  command = "npm run build"
+
+  # Directorio de salida: relativo a 'base', Vite compila a frontend/dist
+  publish = "dist"
+
+[[redirects]]
+  # Redirección global para que /admin y todas las rutas SPA funcionen al recargar
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
